@@ -1,0 +1,26 @@
+# Claude Code (interactive, official harness) + the official Telegram channel plugin, in one container.
+# No tmux, no supervisor: `script` provides the pty, and the container restart policy is the watchdog.
+FROM oven/bun:1-debian
+ARG CLAUDE_CODE_VERSION=2.1.318
+RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates git jq \
+ && rm -rf /var/lib/apt/lists/* \
+ && useradd -m -u 1001 agent && mkdir -p /data /opt/seed && chown agent:agent /data /opt/seed
+
+# Managed policy: owned by root, not editable by the agent, highest precedence in Claude Code.
+COPY policy/managed-settings.json /etc/claude-code/managed-settings.json
+COPY --chmod=755 bin/ /usr/local/bin/
+
+USER agent
+ENV DISABLE_AUTOUPDATER=1 CLAUDE_CONFIG_DIR=/data/config CLAUDE_CODE_ENABLE_PROMPT_SUGGESTION=false
+RUN curl -fsSL https://claude.ai/install.sh | bash -s "${CLAUDE_CODE_VERSION}" \
+ && /home/agent/.local/bin/claude --version
+ENV PATH="/home/agent/.local/bin:${PATH}"
+
+# The official plugin is baked into /opt/seed/config; start.sh copies it to the volume if missing.
+RUN export CLAUDE_CONFIG_DIR=/opt/seed/config && mkdir -p "$CLAUDE_CONFIG_DIR" \
+ && claude plugin marketplace add anthropics/claude-plugins-official \
+ && claude plugin install telegram@claude-plugins-official \
+ && for d in /opt/seed/config/plugins/cache/claude-plugins-official/telegram/*/; do bun install --cwd "$d"; done
+
+WORKDIR /data/workspace
+ENTRYPOINT ["/usr/local/bin/start.sh"]
