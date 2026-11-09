@@ -18,7 +18,7 @@ jobs:
       - name: Policy is valid JSON
         run: jq empty policy/managed-settings.json
       - name: Hadolint
-        uses: hadolint/hadolint-action@v3.1.0
+        uses: hadolint/hadolint-action@v3.5.0
         with:
           dockerfile: Dockerfile
       - name: No secrets committed
