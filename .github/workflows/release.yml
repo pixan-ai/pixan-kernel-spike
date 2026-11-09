@@ -64,7 +64,9 @@ jobs:
   publish:
     name: Publish, sign and attest
     needs: acceptance
-    if: startsWith(github.ref, 'refs/tags/v')
+    # Locked: the image contains Claude Code (all rights reserved). Publish only after deciding the product image
+    # (docs/RELEASING.md) and setting the repository variable PUBLISH_IMAGE to true.
+    if: startsWith(github.ref, 'refs/tags/v') && vars.PUBLISH_IMAGE == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read

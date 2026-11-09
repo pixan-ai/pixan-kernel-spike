@@ -2,6 +2,8 @@
 
 A release is a tag. Pushing a `v*` tag runs [`.github/workflows/release.yml`](../.github/workflows/release.yml): it first proves the release path against a throwaway registry, then publishes `ghcr.io/<owner>/<repo>:<version>` with an SBOM, SLSA provenance, a keyless cosign signature and a GitHub attestation, and verifies all of them. Nothing is published by a merge or a pull request.
 
+> **Publishing is locked.** The image built from this Dockerfile contains Claude Code, which is all rights reserved by Anthropic and is not ours to redistribute publicly. The publish job runs only when the repository variable `PUBLISH_IMAGE` is `true`. Do not set it until the product image is decided: a public base image **without** Claude Code, with each customer's private build adding it and each end user authenticating with their own credentials (Anthropic's conditions for offering Claude Code in a product).
+
 ## Cut a release
 
 1. In a pull request, move "Unreleased" in [CHANGELOG.md](../CHANGELOG.md) under the new version.
