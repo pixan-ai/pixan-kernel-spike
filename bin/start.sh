@@ -7,10 +7,12 @@ mkdir -p "$WS" "$TG"
 cp -rn /opt/seed/config/. "$CFG"/
 # Only the owner can talk to the bot (first start only; afterwards the owner edits it on the volume).
 [ -f "$TG/access.json" ] || printf '{"dmPolicy":"allowlist","allowFrom":["%s"],"groups":{},"pending":{}}\n' "$OWNER_TELEGRAM_ID" > "$TG/access.json"
-# Nobody is at the screen: pre-accept onboarding, the API key and trust for the workspace folder.
+# Nobody is at the screen: pre-accept onboarding, the API key (if one is used) and trust for the workspace folder.
+# Auth: ANTHROPIC_API_KEY (Console, billed per use) or CLAUDE_CODE_OAUTH_TOKEN (subscription, from `claude setup-token`).
 [ -s "$CFG/.claude.json" ] || echo '{}' > "$CFG/.claude.json"
-jq --arg k "${ANTHROPIC_API_KEY: -20}" --arg ws "$WS" \
-  '.hasCompletedOnboarding=true | .customApiKeyResponses.approved=(((.customApiKeyResponses.approved//[])-[$k])+[$k]) | .projects[$ws].hasTrustDialogAccepted=true | .projects[$ws].hasCompletedProjectOnboarding=true' \
+KEY="${ANTHROPIC_API_KEY:-}"
+jq --arg k "${KEY: -20}" --arg ws "$WS" \
+  '.hasCompletedOnboarding=true | (if $k=="" then . else .customApiKeyResponses.approved=(((.customApiKeyResponses.approved//[])-[$k])+[$k]) end) | .projects[$ws].hasTrustDialogAccepted=true | .projects[$ws].hasCompletedProjectOnboarding=true' \
   "$CFG/.claude.json" > "$CFG/.claude.json.tmp" && mv "$CFG/.claude.json.tmp" "$CFG/.claude.json"
 cd "$WS"
 # script = the pty; tail keeps stdin open; stty avoids a 0x0 terminal. The screen is kept in /data/tui.log (see screen.sh).

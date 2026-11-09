@@ -5,7 +5,7 @@ Status: the Dockerfile builds and runs under Docker Desktop. The Railway steps b
 1. Create a project and a service from this repository (Dockerfile build; [`railway.json`](../railway.json) sets the builder and the restart policy).
 2. Add a **volume** mounted at `/data` (one volume per service).
 3. Set variables in the Railway dashboard (never in the repository):
-   - `ANTHROPIC_API_KEY`
+   - `CLAUDE_CODE_OAUTH_TOKEN` (subscription, from `claude setup-token`) **or** `ANTHROPIC_API_KEY` (Console, per use). Not both: the API key wins.
    - `TELEGRAM_BOT_TOKEN`
    - `OWNER_TELEGRAM_ID`
    - optional: `TZ`, `ANTHROPIC_MODEL`

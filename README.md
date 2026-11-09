@@ -21,11 +21,11 @@ Telegram ──► official plugin (MCP channel) ──► claude (interactive, 
 ## Quick start (Docker)
 
 1. Create a bot with [@BotFather](https://t.me/BotFather) and get your numeric Telegram user id.
-2. Create an [Anthropic API key](https://console.anthropic.com/) (Channels need claude.ai or Console API-key auth).
+2. Get a credential: run `claude setup-token` on your machine to use your Claude subscription, or create an [Anthropic API key](https://console.anthropic.com/) (Channels need claude.ai or Console API-key auth).
 3. Configure and run:
 
 ```bash
-cp .env.example .env   # then fill in the three values
+cp .env.example .env   # then fill in one credential and the two Telegram values
 ```
 
 ```bash
@@ -44,7 +44,8 @@ See [docs/DEPLOY-RAILWAY.md](docs/DEPLOY-RAILWAY.md). The Dockerfile deploys as 
 
 | Variable | Required | Purpose |
 |---|---|---|
-| `ANTHROPIC_API_KEY` | yes | Credential for Claude Code |
+| `CLAUDE_CODE_OAUTH_TOKEN` | one of the two | Claude subscription (Pro/Max) token from `claude setup-token`; uses the subscription's limits |
+| `ANTHROPIC_API_KEY` | one of the two | Console API key, billed per use. Takes precedence if both are set |
 | `TELEGRAM_BOT_TOKEN` | yes | Bot token, read by the official plugin |
 | `OWNER_TELEGRAM_ID` | yes | Only this user can talk to the bot (allowlist) |
 | `CLAUDE_FLAGS` | no | Extra `claude` flags. Empty = default interactive mode (auto mode) |
