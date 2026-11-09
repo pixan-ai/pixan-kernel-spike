@@ -15,6 +15,8 @@ T="${CLAUDE_CODE_OAUTH_TOKEN:-}"; T="${T//[[:space:]]/}"; [ -z "$T" ] || export 
 CFG=/data/config; TG=$CFG/channels/telegram; WS=/data/workspace
 mkdir -p "$WS" "$TG"
 cp -rn /opt/seed/config/. "$CFG"/
+# The agent's own instructions (what it cannot do here). Copied once: the owner can edit the copy on the volume.
+[ ! -d /opt/seed/workspace ] || cp -n /opt/seed/workspace/CLAUDE.md "$WS"/
 # Only the owner can talk to the bot (first start only; afterwards the owner edits it on the volume).
 [ -f "$TG/access.json" ] || printf '{"dmPolicy":"allowlist","allowFrom":["%s"],"groups":{},"pending":{}}\n' "$OWNER_TELEGRAM_ID" > "$TG/access.json"
 # The plugin and the alert hook read the bot credentials from this file (ready for an env scrub on hosts that allow it).

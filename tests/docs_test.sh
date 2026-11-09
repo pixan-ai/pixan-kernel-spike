@@ -46,5 +46,7 @@ check "relative links in the documents resolve" test -z "$broken"
 [ -z "$broken" ] || echo "     broken:$broken"
 
 check "every Dockerfile FROM is pinned by digest (Dependabot keeps it current)" test -z "$(grep -E '^FROM ' Dockerfile | grep -vE '@sha256:[0-9a-f]{64}')"
+check "agent instructions exist and match the policy: connectors disabled" bash -c 'jq -e .disableClaudeAiConnectors policy/managed-settings.json >/dev/null && grep -qi "connectors.*disabled" workspace/CLAUDE.md'
+check "agent instructions tell it not to touch credentials" grep -qi "never read, print, send" workspace/CLAUDE.md
 
 echo "$FAILS failed"; exit $((FAILS > 0))
