@@ -15,6 +15,12 @@ mkdir -p "$WS" "$TG"
 cp -rn /opt/seed/config/. "$CFG"/
 # Only the owner can talk to the bot (first start only; afterwards the owner edits it on the volume).
 [ -f "$TG/access.json" ] || printf '{"dmPolicy":"allowlist","allowFrom":["%s"],"groups":{},"pending":{}}\n' "$OWNER_TELEGRAM_ID" > "$TG/access.json"
+# The plugin and the alert hook read the bot credentials from this file, so the environment can be scrubbed.
+(umask 077; printf 'TELEGRAM_BOT_TOKEN=%s\nOWNER_TELEGRAM_ID=%s\n' "$TELEGRAM_BOT_TOKEN" "$OWNER_TELEGRAM_ID" > "$TG/.env")
+# Can bubblewrap (needed by CLAUDE_CODE_SUBPROCESS_ENV_SCRUB on Linux) isolate a process on this host?
+b1=$(bwrap --ro-bind / / --dev /dev --unshare-pid --proc /proc true 2>&1) && b1=ok
+b2=$(bwrap --ro-bind / / --dev /dev --unshare-pid --bind /proc /proc true 2>&1) && b2=ok
+echo "bwrap probe: fresh /proc: ${b1:0:120}; existing /proc: ${b2:0:120}" >&2
 # Nobody is at the screen: pre-accept onboarding, the API key (if one is used) and trust for the workspace folder.
 # Auth: ANTHROPIC_API_KEY (Console, billed per use) or CLAUDE_CODE_OAUTH_TOKEN (subscription, from `claude setup-token`).
 [ -s "$CFG/.claude.json" ] || echo '{}' > "$CFG/.claude.json"
