@@ -13,7 +13,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certifi
 COPY policy/managed-settings.json /etc/claude-code/managed-settings.json
 COPY --chmod=755 bin/ /usr/local/bin/
 
-USER agent
+USER 1001
 ENV DISABLE_AUTOUPDATER=1 CLAUDE_CONFIG_DIR=/data/config TELEGRAM_STATE_DIR=/data/config/channels/telegram CLAUDE_CODE_ENABLE_PROMPT_SUGGESTION=false
 RUN curl -fsSL https://claude.ai/install.sh | bash -s "${CLAUDE_CODE_VERSION}" \
  && /home/agent/.local/bin/claude --version
