@@ -15,6 +15,8 @@ jobs:
       - uses: actions/checkout@v7
       - name: ShellCheck
         run: shellcheck bin/*.sh tests/*.sh
+      - name: Docs match the code
+        run: bash tests/docs_test.sh
       - name: Policy is valid JSON
         run: jq empty policy/managed-settings.json
       - name: Policy never waits for a person (denyInsteadOfPrompting)
@@ -40,5 +42,8 @@ jobs:
           tags: pixan-kernel-spike:ci
           cache-from: type=gha
           cache-to: type=gha,mode=max
-      - name: Entrypoint acceptance tests (inside the built image)
-        run: docker run --rm --user 0 --entrypoint bash -v "$PWD/tests:/tests:ro" pixan-kernel-spike:ci /tests/start_test.sh
+      - name: Acceptance tests (inside the built image)
+        run: |
+          for t in start tools policy; do
+            docker run --rm --user 0 --entrypoint bash -v "$PWD/tests:/tests:ro" pixan-kernel-spike:ci "/tests/${t}_test.sh" || exit 1
+          done

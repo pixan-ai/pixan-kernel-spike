@@ -20,7 +20,10 @@ shellcheck bin/*.sh tests/*.sh
 jq empty policy/managed-settings.json
 hadolint Dockerfile
 docker build -t pixan-kernel-spike .
-docker run --rm --user 0 --entrypoint bash -v "$PWD/tests:/tests:ro" pixan-kernel-spike /tests/start_test.sh
+bash tests/docs_test.sh
+for t in start tools policy; do
+  docker run --rm --user 0 --entrypoint bash -v "$PWD/tests:/tests:ro" pixan-kernel-spike "/tests/${t}_test.sh" || break
+done
 ```
 
 A change to `bin/` comes with a test in `tests/` that runs the script and checks what it does (exit code, files, output). Break the value the test guards and make sure it turns red.
