@@ -38,6 +38,6 @@ Status: lab / alpha. Not audited. Evidence labels as in [FINDINGS.md](FINDINGS.m
 | Host | Available |
 |---|---|
 | Railway container | Soft layers only (policy rules, classifier). The platform blocks user namespaces, so the env scrub and the sandbox cannot run (Lab) |
-| A VM or server that allows namespaces | `CLAUDE_CODE_SUBPROCESS_ENV_SCRUB=1`, the official sandbox, an egress firewall (Open: not tested here) |
+| A VM or server that allows namespaces | `CLAUDE_CODE_SUBPROCESS_ENV_SCRUB=1`, the official sandbox, an egress firewall (Open: not tested here). Check first: `unshare -U true` must succeed inside the container, as the unprivileged user |
 
 See [SECRETS.md](SECRETS.md) for rotation and [REPO-SETTINGS.md](REPO-SETTINGS.md) for the repository's own protections.
