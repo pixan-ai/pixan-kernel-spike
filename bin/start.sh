@@ -2,6 +2,8 @@
 # Runs interactive Claude Code (the mode that wakes up on channel events) inside a minimal pty (`script`), without tmux.
 # If claude dies, the container exits and the restart policy brings it back. There is no watchdog process.
 set -euo pipefail
+# Without a Claude credential, claude would sit on a login screen nobody sees: fail fast instead.
+[ -n "${CLAUDE_CODE_OAUTH_TOKEN:-}${ANTHROPIC_API_KEY:-}" ] || { echo "missing CLAUDE_CODE_OAUTH_TOKEN or ANTHROPIC_API_KEY" >&2; exit 1; }
 # Railway mounts volumes owned by root (it runs this as root via RAILWAY_RUN_UID=0): fix ownership, then drop to agent.
 if [ "$(id -u)" = 0 ]; then
   mkdir -p /data/workspace && chown 1001:1001 /data /data/workspace
@@ -28,5 +30,5 @@ cd "$WS"
 # Railway has no shell into the container: mirror the readable screen to the service log whenever it changes.
 (prev=; while sleep 30; do cur=$(screen.sh 25 2>/dev/null || true); [ "$cur" = "$prev" ] || { printf '%s\n----\n' "$cur" >&2; prev=$cur; }; done) &
 # script = the pty; tail keeps stdin open; stty avoids a 0x0 terminal. The screen is kept in /data/tui.log (see screen.sh).
-tail -f /dev/null | script -qfc "stty cols 120 rows 40; exec claude --channels plugin:telegram@claude-plugins-official ${CLAUDE_FLAGS:-}" /data/tui.log > /dev/null
+tail -f /dev/null | script -qfc "stty cols 120 rows 40; exec claude --channels plugin:telegram@claude-plugins-official ${CLAUDE_FLAGS:-}" /data/tui.log > /dev/null || true  # tail dies of SIGPIPE when claude exits; still report it below
 echo "claude exited" >&2; exit 1
