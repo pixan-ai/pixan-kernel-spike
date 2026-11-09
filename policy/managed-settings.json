@@ -69,6 +69,18 @@
         ]
       }
     ],
+    "Notification": [
+      {
+        "matcher": "permission_prompt",
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 15,
+            "command": "m=$(jq -r .message); . /data/config/channels/telegram/.env; curl -fsS -m 10 \"https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage\" -d chat_id=\"$OWNER_TELEGRAM_ID\" --data-urlencode text=\"⏸ Agent is waiting for a permission: $m\" >/dev/null"
+          }
+        ]
+      }
+    ],
     "PostToolUseFailure": [
       {
         "hooks": [
