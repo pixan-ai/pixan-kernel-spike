@@ -54,7 +54,7 @@
           {
             "type": "command",
             "timeout": 15,
-            "command": "e=$(jq -r .error); curl -fsS -m 10 \"https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage\" -d chat_id=\"$OWNER_TELEGRAM_ID\" --data-urlencode text=\"⚠️ Agent stopped: $e. Check the credential.\" >/dev/null"
+            "command": "e=$(jq -r .error); . /data/config/channels/telegram/.env; curl -fsS -m 10 \"https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage\" -d chat_id=\"$OWNER_TELEGRAM_ID\" --data-urlencode text=\"⚠️ Agent stopped: $e. Check the credential.\" >/dev/null"
           }
         ]
       }

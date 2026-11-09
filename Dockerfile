@@ -5,7 +5,7 @@ ARG CLAUDE_CODE_VERSION=2.1.318
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 # Unpinned apt packages on purpose: pinned Debian versions vanish from the mirror; Dependabot bumps the base image.
 # hadolint ignore=DL3008
-RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates git jq \
+RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates git jq bubblewrap \
  && rm -rf /var/lib/apt/lists/* \
  && useradd -m -u 1001 agent && mkdir -p /data /opt/seed && chown agent:agent /data /opt/seed
 
@@ -14,7 +14,7 @@ COPY policy/managed-settings.json /etc/claude-code/managed-settings.json
 COPY --chmod=755 bin/ /usr/local/bin/
 
 USER agent
-ENV DISABLE_AUTOUPDATER=1 CLAUDE_CONFIG_DIR=/data/config CLAUDE_CODE_ENABLE_PROMPT_SUGGESTION=false
+ENV DISABLE_AUTOUPDATER=1 CLAUDE_CONFIG_DIR=/data/config TELEGRAM_STATE_DIR=/data/config/channels/telegram CLAUDE_CODE_ENABLE_PROMPT_SUGGESTION=false
 RUN curl -fsSL https://claude.ai/install.sh | bash -s "${CLAUDE_CODE_VERSION}" \
  && /home/agent/.local/bin/claude --version
 ENV PATH="/home/agent/.local/bin:${PATH}"
