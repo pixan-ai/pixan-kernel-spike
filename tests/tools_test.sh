@@ -3,6 +3,7 @@
 # Acceptance tests for the two diagnostic tools, bin/screen.sh and bin/denials.sh. They read fixed paths under /data
 # and the installed managed policy, so run as root inside the built image (or in a private mount namespace).
 set -uo pipefail
+cd / || exit 1  # the tests empty /data, which can be the working directory of the container
 SCREEN=${SCREEN:-/usr/local/bin/screen.sh}
 DENIALS=${DENIALS:-/usr/local/bin/denials.sh}
 P=/data/config/projects/-data-workspace
