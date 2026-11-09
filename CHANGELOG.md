@@ -12,6 +12,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 - Policy: `denyInsteadOfPrompting` so an unattended agent never waits for a person; deny rules and an auto-mode rule against leaking credentials; hooks that audit and alert the owner on Telegram.
 - Acceptance tests for the entrypoint, the diagnostic tools, the policy and the documentation, run in CI inside the built image.
 - Documentation: findings, architecture, Railway deployment, threat model, secrets, repository settings.
+- Supply chain: every action pinned to a commit SHA (and a test that keeps it so), CodeQL for the workflows, OpenSSF Scorecard, a report-only Trivy scan, and a release workflow that publishes with an SBOM, SLSA provenance, a keyless cosign signature and a GitHub attestation. See [docs/RELEASING.md](docs/RELEASING.md).
 
 ### Fixed
 

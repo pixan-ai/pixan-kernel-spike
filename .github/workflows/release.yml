@@ -1,0 +1,122 @@
+name: Release
+
+# A `v*` tag publishes the image. Pull requests that touch this file or the Dockerfile, and manual runs, only
+# exercise the release path against a throwaway registry, so the first real release is not the first test.
+on:
+  push:
+    tags: ["v*"]
+  pull_request:
+    paths:
+      - .github/workflows/release.yml
+      - Dockerfile
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  acceptance:
+    name: Release path against a throwaway registry
+    runs-on: ubuntu-latest
+    services:
+      registry:
+        image: registry:3
+        ports:
+          - 5000:5000
+    env:
+      IMAGE: localhost:5000/pixan-kernel-spike
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+        with:
+          driver-opts: network=host
+      - name: Build and push with SBOM and provenance
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          push: true
+          tags: localhost:5000/pixan-kernel-spike:test
+          sbom: true
+          provenance: mode=max
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: The image carries an SBOM and SLSA provenance
+        run: |
+          docker buildx imagetools inspect "$IMAGE:test" --format '{{json .SBOM}}' | jq -e '[.. | objects | select(has("SPDXID"))] | length > 0'
+          docker buildx imagetools inspect "$IMAGE:test" --format '{{json .Provenance}}' | jq -e '[.. | objects | select(has("buildType"))] | length > 0'
+      - uses: sigstore/cosign-installer@756fe2d284c7292c4e9b62c8a28f1e5629c59532 # v4.1.3
+      - name: Sign with an ephemeral key, verify, and see a wrong key fail
+        env:
+          COSIGN_PASSWORD: ""
+        run: |
+          cd "$RUNNER_TEMP"
+          cosign generate-key-pair
+          cosign generate-key-pair --output-key-prefix other
+          digest=$(docker buildx imagetools inspect "$IMAGE:test" --format '{{.Manifest.Digest}}')
+          cosign sign --yes --key cosign.key --tlog-upload=false --allow-http-registry "$IMAGE@$digest"
+          cosign verify --key cosign.pub --insecure-ignore-tlog --allow-http-registry "$IMAGE@$digest"
+          if cosign verify --key other.pub --insecure-ignore-tlog --allow-http-registry "$IMAGE@$digest"; then
+            echo "verification with the wrong key must fail"; exit 1
+          fi
+
+  publish:
+    name: Publish, sign and attest
+    needs: acceptance
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+      attestations: write
+    env:
+      IMAGE: ghcr.io/${{ github.repository }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: meta
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+      - id: build
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          sbom: true
+          provenance: mode=max
+      - uses: sigstore/cosign-installer@756fe2d284c7292c4e9b62c8a28f1e5629c59532 # v4.1.3
+      - name: Sign (keyless)
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: cosign sign --yes "$IMAGE@$DIGEST"
+      - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-name: ghcr.io/${{ github.repository }}
+          subject-digest: ${{ steps.build.outputs.digest }}
+          push-to-registry: true
+      - name: Verify what was just published
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          cosign verify "$IMAGE@$DIGEST" \
+            --certificate-identity-regexp "^https://github.com/${REPO}/\.github/workflows/release\.yml@refs/tags/v.+$" \
+            --certificate-oidc-issuer https://token.actions.githubusercontent.com
+          gh attestation verify "oci://$IMAGE@$DIGEST" --repo "$REPO"
+          docker buildx imagetools inspect "$IMAGE@$DIGEST" --format '{{json .SBOM}}' | jq -e '[.. | objects | select(has("SPDXID"))] | length > 0'
