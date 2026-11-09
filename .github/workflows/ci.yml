@@ -17,6 +17,8 @@ jobs:
         run: shellcheck bin/*.sh tests/*.sh
       - name: Policy is valid JSON
         run: jq empty policy/managed-settings.json
+      - name: Policy never waits for a person (denyInsteadOfPrompting)
+        run: jq -e '.permissions.denyInsteadOfPrompting == true' policy/managed-settings.json
       - name: Hadolint
         uses: hadolint/hadolint-action@v3.5.0
         with:

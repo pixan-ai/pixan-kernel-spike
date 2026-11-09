@@ -1,7 +1,7 @@
 # Claude Code (interactive, official harness) + the official Telegram channel plugin, in one container.
 # No tmux, no supervisor: `script` provides the pty, and the container restart policy is the watchdog.
 FROM oven/bun:1-debian
-ARG CLAUDE_CODE_VERSION=2.1.318
+ARG CLAUDE_CODE_VERSION=2.1.319
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 # Unpinned apt packages on purpose: pinned Debian versions vanish from the mirror; Dependabot bumps the base image.
 # hadolint ignore=DL3008

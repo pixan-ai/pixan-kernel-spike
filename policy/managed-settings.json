@@ -3,6 +3,7 @@
   "skipDangerousModePermissionPrompt": true,
   "disableClaudeAiConnectors": true,
   "permissions": {
+    "denyInsteadOfPrompting": true,
     "deny": [
       "Read(**/.env)",
       "Read(**/.env.*)",
