@@ -20,7 +20,7 @@ Evidence labels: **Lab** = observed on a real run; **Docs** = from official docu
 
 | Finding | Evidence |
 |---|---|
-| Auto mode can still stall on a permission prompt (for example a first Read outside the working directories). Nobody sees it unless they open the screen log. | Lab |
+| Auto mode can still stall on a permission prompt (for example a first Read outside the working directories). A `Notification` hook (`permission_prompt`) now alerts the owner on Telegram; the alert itself is not yet observed firing. | Lab (alert: Open) |
 | A broad `Edit(//data/config/**)` deny also blocked the agent's own memory directory. Deny specific files instead. | Lab |
 | `deny` rules block file tools, not Bash. | Docs, Lab |
 | A `Read` deny rule also prevented writing the same file. Whether `Read(**/.env)` blocked reads is **not** settled: the audit log shows two reads of `/data/workspace/.env`, and the hook type that logged them was not identified. | Lab (unresolved) |
