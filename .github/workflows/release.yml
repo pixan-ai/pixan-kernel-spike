@@ -55,7 +55,7 @@ jobs:
           cosign generate-key-pair
           cosign generate-key-pair --output-key-prefix other
           digest=$(docker buildx imagetools inspect "$IMAGE:test" --format '{{.Manifest.Digest}}')
-          cosign sign --yes --key cosign.key --tlog-upload=false --allow-http-registry "$IMAGE@$digest"
+          cosign sign --yes --key cosign.key --use-signing-config=false --new-bundle-format=false --tlog-upload=false --allow-http-registry "$IMAGE@$digest"
           cosign verify --key cosign.pub --insecure-ignore-tlog --allow-http-registry "$IMAGE@$digest"
           if cosign verify --key other.pub --insecure-ignore-tlog --allow-http-registry "$IMAGE@$digest"; then
             echo "verification with the wrong key must fail"; exit 1
