@@ -2,6 +2,11 @@
 # Runs interactive Claude Code (the mode that wakes up on channel events) inside a minimal pty (`script`), without tmux.
 # If claude dies, the container exits and the restart policy brings it back. There is no watchdog process.
 set -euo pipefail
+# Railway mounts volumes owned by root (it runs this as root via RAILWAY_RUN_UID=0): fix ownership, then drop to agent.
+if [ "$(id -u)" = 0 ]; then
+  mkdir -p /data/workspace && chown 1001:1001 /data /data/workspace
+  exec setpriv --reuid=1001 --regid=1001 --init-groups env HOME=/home/agent "$0" "$@"
+fi
 CFG=/data/config; TG=$CFG/channels/telegram; WS=/data/workspace
 mkdir -p "$WS" "$TG"
 cp -rn /opt/seed/config/. "$CFG"/

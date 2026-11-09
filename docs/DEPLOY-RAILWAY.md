@@ -9,6 +9,7 @@ Status: the Dockerfile builds and runs under Docker Desktop. The Railway steps b
    - `TELEGRAM_BOT_TOKEN`
    - `OWNER_TELEGRAM_ID`
    - optional: `TZ`, `ANTHROPIC_MODEL`
+   - `RAILWAY_RUN_UID=0`: Railway volumes are owned by root. The entrypoint only fixes `/data` ownership as root, then drops to the `agent` user (uid 1001).
 4. Deploy and message the bot.
 
 Notes:
