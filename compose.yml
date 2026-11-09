@@ -1,0 +1,14 @@
+services:
+  agent:
+    build: .
+    env_file: .env
+    environment:
+      TZ: ${TZ:-UTC}
+      # Extra flags for claude. Empty = default interactive mode (auto mode, with the classifier).
+      CLAUDE_FLAGS: ${CLAUDE_FLAGS:-}
+    volumes:
+      - data:/data
+    restart: unless-stopped
+    init: true
+volumes:
+  data:

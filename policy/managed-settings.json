@@ -1,0 +1,86 @@
+{
+  "channelsEnabled": true,
+  "skipDangerousModePermissionPrompt": true,
+  "disableClaudeAiConnectors": true,
+  "permissions": {
+    "deny": [
+      "Read(**/.env)",
+      "Read(**/.env.*)",
+      "Read(//data/config/.credentials.json)",
+      "Edit(//data/config/settings.json)",
+      "Edit(//data/config/.claude.json)",
+      "Edit(//data/config/.credentials.json)",
+      "Edit(//data/config/channels/**)",
+      "Edit(//data/config/plugins/**)",
+      "Edit(//etc/claude-code/**)",
+      "Bash(rm -rf /)",
+      "Bash(rm -rf /*)"
+    ],
+    "allow": [
+      "ToolSearch",
+      "mcp__plugin_telegram_telegram__reply",
+      "mcp__plugin_telegram_telegram__react",
+      "mcp__plugin_telegram_telegram__edit_message",
+      "mcp__plugin_telegram_telegram__download_attachment"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "date '+The current date and time is %A %Y-%m-%d %H:%M %Z.'",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cat >> /data/audit.jsonl",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "StopFailure": [
+      {
+        "matcher": "authentication_failed|billing_error|account_on_hold|oauth_org_not_allowed",
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 15,
+            "command": "e=$(jq -r .error); curl -fsS -m 10 \"https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage\" -d chat_id=\"$OWNER_TELEGRAM_ID\" --data-urlencode text=\"⚠️ Agent stopped: $e. Check the credential.\" >/dev/null"
+          }
+        ]
+      }
+    ],
+    "PostToolUseFailure": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cat >> /data/audit.jsonl",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PermissionDenied": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cat >> /data/audit.jsonl",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  },
+  "promptSuggestionEnabled": false
+}
