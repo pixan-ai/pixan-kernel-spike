@@ -14,6 +14,8 @@ Status: verified end to end on Railway (November 2026) with a Claude Max subscri
 
 Notes:
 
+- `railway.json` sets watch paths: only changes to `Dockerfile`, `bin/`, `policy/` or `railway.json` redeploy (and restart the agent). Docs and CI changes do not.
+
 - Railway bills per minute for CPU and memory. Long polling keeps a Serverless service awake, so leave Serverless off.
 - Use a dedicated bot token. Do not reuse one that another process polls.
 - Rotate the API key if it is ever pasted into a chat, log or screenshot.
