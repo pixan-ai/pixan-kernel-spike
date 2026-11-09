@@ -1,6 +1,6 @@
 # Deploy on Railway
 
-Status: the Dockerfile builds and runs under Docker Desktop. The Railway steps below are the intended path and have not been verified end to end.
+Status: verified end to end on Railway (November 2026) with a Claude Max subscription token.
 
 1. Create a project and a service from this repository (Dockerfile build; [`railway.json`](../railway.json) sets the builder and the restart policy).
 2. Add a **volume** mounted at `/data` (one volume per service).
