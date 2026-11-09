@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# shellcheck disable=SC2329  # the helpers below are called through check "$@"
+# shellcheck disable=SC2329,SC2016  # helpers are called through check "$@"; regexes and jq programs are single-quoted on purpose
 # Acceptance tests for bin/start.sh: run the real entrypoint as root (as Railway does with RAILWAY_RUN_UID=0)
 # against an empty /data, with a stub `script` that records what claude would have been started with.
 # CI runs this inside the built image; START points at the entrypoint under test.
@@ -45,8 +45,8 @@ check "only the owner is allowlisted" test "$(jq -c '[.dmPolicy, .allowFrom]' /d
 check "no API key -> nothing pre-approved" test "$(jq -c '.customApiKeyResponses // "none"' /data/config/.claude.json)" = '"none"'
 check "workspace trusted and onboarding done" test "$(jq -c '[.hasCompletedOnboarding, .projects["/data/workspace"].hasTrustDialogAccepted]' /data/config/.claude.json)" = '[true,true]'
 
-run ANTHROPIC_API_KEY=sk-ant-api03-0123456789abcdefghijKLMNOPQRST
-check "API key switch: its last 20 chars are pre-approved" test "$(jq -c '.customApiKeyResponses.approved' /data/config/.claude.json)" = '["abcdefghijKLMNOPQRST"]'
+run ANTHROPIC_API_KEY=dummy-api-key-0123456789ABCDEFGHIJ
+check "API key switch: its last 20 chars are pre-approved" test "$(jq -c '.customApiKeyResponses.approved' /data/config/.claude.json)" = '["0123456789ABCDEFGHIJ"]'
 
 run
 check "no Claude credential -> fails fast" test "$RC" = 1
