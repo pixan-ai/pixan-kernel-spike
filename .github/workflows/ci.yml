@@ -14,7 +14,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: ShellCheck
-        run: shellcheck bin/*.sh
+        run: shellcheck bin/*.sh tests/*.sh
       - name: Policy is valid JSON
         run: jq empty policy/managed-settings.json
       - name: Hadolint
@@ -34,5 +34,9 @@ jobs:
         with:
           context: .
           push: false
+          load: true
+          tags: pixan-kernel-spike:ci
           cache-from: type=gha
           cache-to: type=gha,mode=max
+      - name: Entrypoint acceptance tests (inside the built image)
+        run: docker run --rm --user 0 --entrypoint bash -v "$PWD/tests:/tests:ro" pixan-kernel-spike:ci /tests/start_test.sh
