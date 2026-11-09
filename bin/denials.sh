@@ -5,6 +5,6 @@ grep -c -E "PermissionDenied|PostToolUseFailure" /etc/claude-code/managed-settin
 echo "== prompt-suggestion variable (expected: false) =="
 printenv CLAUDE_CODE_ENABLE_PROMPT_SUGGESTION
 echo "== tool errors in the latest session (includes denied permissions) =="
-f=$(ls -t /data/config/projects/-data-workspace/*.jsonl 2>/dev/null | head -1)
+f=$(find /data/config/projects/-data-workspace -maxdepth 1 -name '*.jsonl' -printf '%T@ %p\n' 2>/dev/null | sort -rn | head -1 | cut -d' ' -f2-)
 [ -n "$f" ] || { echo "no session transcript"; exit 0; }
 jq -r 'select(.type=="user") | .message.content? | arrays | .[] | select(.type=="tool_result" and .is_error==true) | (.content|tostring)' "$f" | tail -"${1:-8}" | cut -c1-400
