@@ -45,4 +45,6 @@ done
 check "relative links in the documents resolve" test -z "$broken"
 [ -z "$broken" ] || echo "     broken:$broken"
 
+check "every Dockerfile FROM is pinned by digest (Dependabot keeps it current)" test -z "$(grep -E '^FROM ' Dockerfile | grep -vE '@sha256:[0-9a-f]{64}')"
+
 echo "$FAILS failed"; exit $((FAILS > 0))
