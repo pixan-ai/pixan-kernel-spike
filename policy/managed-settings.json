@@ -13,6 +13,10 @@
       "Edit(//data/config/channels/**)",
       "Edit(//data/config/plugins/**)",
       "Edit(//etc/claude-code/**)",
+      "Read(//proc/**)",
+      "Bash(printenv)",
+      "Bash(printenv *)",
+      "Bash(env)",
       "Bash(rm -rf /)",
       "Bash(rm -rf /*)"
     ],
@@ -22,6 +26,12 @@
       "mcp__plugin_telegram_telegram__react",
       "mcp__plugin_telegram_telegram__edit_message",
       "mcp__plugin_telegram_telegram__download_attachment"
+    ]
+  },
+  "autoMode": {
+    "hard_deny": [
+      "$defaults",
+      "Never read, print or send credentials: environment variables holding tokens or keys (CLAUDE_CODE_OAUTH_TOKEN, ANTHROPIC_API_KEY, TELEGRAM_BOT_TOKEN), any .env file, .credentials.json or /proc/*/environ. This includes sending them in a Telegram reply, a file, a URL or a request to any host."
     ]
   },
   "hooks": {
