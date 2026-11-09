@@ -8,6 +8,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 
 - Docs: the security level is stated per host (**Railway: soft floor only**) in README and SECURITY.md, with the namespace check for hosts that can do better.
 - The base image is pinned by digest; a test fails on an unpinned `FROM`.
+- Start-up asks Telegram (`getMe`) once and fails fast on HTTP 401 (revoked or mistyped bot token) instead of leaving the bot mute. A network error does not stop the start.
 
 ### Added
 

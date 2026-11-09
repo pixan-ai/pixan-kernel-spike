@@ -22,7 +22,7 @@ Status: lab / alpha. Not audited. Evidence labels as in [FINDINGS.md](FINDINGS.m
 | An unattended agent stalls or does something unsafe | `denyInsteadOfPrompting` (a call that would prompt is denied, the agent carries on); classifier; non-root user; audit log | Docs; Lab for the stall and its alert; Open for `denyInsteadOfPrompting` on Railway | The audit log is written after the fact |
 | The credential dies and nobody notices | `StopFailure` hook alerts the owner on Telegram | Lab (expired key) | Reactive: fires when a turn fails, not on a timer |
 | Tampered image, CLI or plugin | Claude Code version pinned; installer and marketplace are the official ones; CI builds the image and runs tests in it | Docs | **The plugin is not pinned** (the base image is pinned by digest; SBOM, provenance and signing are in CI but the release is locked) |
-| Two processes poll one bot token (HTTP 409) | A dedicated token per deployment, documented | Lab | No preflight check yet (Open) |
+| Two processes poll one bot token (HTTP 409) | A dedicated token per deployment, documented | Lab | `start.sh` asks Telegram (`getMe`) once and stops on HTTP 401; it cannot see a second poller (HTTP 409 only appears while polling): Open |
 | Container or host compromise | Non-root `agent` (uid 1001); no extra capabilities requested | Code | On Railway the entrypoint starts as root only to fix `/data` ownership, then drops to uid 1001 |
 | Data at rest | Volume access is the host's | Docs | Transcripts, memory and the token file are not encrypted by this project |
 
