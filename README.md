@@ -72,7 +72,7 @@ Known limits (read before trusting it):
 - There is **no egress control** by default. An allowed shell can reach any host. A network allowlist is not included yet.
 - The alert hook is reactive: it fires when a turn fails, not on a timer.
 
-The full picture is in the [threat model](docs/THREAT-MODEL.md). Report vulnerabilities as described in [SECURITY.md](SECURITY.md).
+The full picture is in the [threat model](docs/THREAT-MODEL.md). Report vulnerabilities as described in [SECURITY.md](SECURITY.md). For what a customer would download versus what runs here, see [lab image and product image](docs/PRODUCT-IMAGE.md).
 
 ## Repository layout
 

@@ -47,3 +47,4 @@ Evidence labels: **Lab** = observed on a real run; **Docs** = from official docu
 - 24-hour soak test with a non-expiring key and memory growth.
 - Whether adding `/tmp` to `permissions.additionalDirectories` removes the stall prompt.
 - Preflight check for a reused bot token (`getMe` and HTTP 409).
+- Zombie detection (Claude alive, Telegram channel dead): no verified signal yet. `start.sh` exits when `claude` exits, which covers a crash but not a hang. Before writing a watchdog, find in a real log what a dead channel looks like (plugin process gone, no `getUpdates` activity); a guessed signal could restart a healthy bot.
