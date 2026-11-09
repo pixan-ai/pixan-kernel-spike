@@ -7,8 +7,9 @@ if [ "$(id -u)" = 0 ]; then
   mkdir -p /data/workspace && chown 1001:1001 /data /data/workspace
   exec setpriv --reuid=1001 --regid=1001 --init-groups env HOME=/home/agent "$0" "$@"
 fi
-# Credential sanity check without printing it: a token copied from a phone often carries line breaks.
-T="${CLAUDE_CODE_OAUTH_TOKEN:-}"; [ -z "$T" ] || echo "oauth token: ${#T} chars, starts with sk-ant-oat01-: $([[ "$T" == sk-ant-oat01-* ]] && echo yes || echo NO), whitespace: $([[ "$T" =~ [[:space:]] ]] && echo YES || echo no)" >&2
+# A token copied from a phone often carries line breaks; tokens never contain whitespace, so strip it.
+# Then log a sanity check without printing any part of it.
+T="${CLAUDE_CODE_OAUTH_TOKEN:-}"; T="${T//[[:space:]]/}"; [ -z "$T" ] || export CLAUDE_CODE_OAUTH_TOKEN="$T"; [ -z "$T" ] || echo "oauth token: ${#T} chars, starts with sk-ant-oat01-: $([[ "$T" == sk-ant-oat01-* ]] && echo yes || echo NO), whitespace: $([[ "$T" =~ [[:space:]] ]] && echo YES || echo no)" >&2
 CFG=/data/config; TG=$CFG/channels/telegram; WS=/data/workspace
 mkdir -p "$WS" "$TG"
 cp -rn /opt/seed/config/. "$CFG"/
