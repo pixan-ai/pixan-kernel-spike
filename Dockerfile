@@ -5,7 +5,7 @@ ARG CLAUDE_CODE_VERSION=2.1.318
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 # Unpinned apt packages on purpose: pinned Debian versions vanish from the mirror; Dependabot bumps the base image.
 # hadolint ignore=DL3008
-RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates git jq bubblewrap \
+RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates git jq \
  && rm -rf /var/lib/apt/lists/* \
  && useradd -m -u 1001 agent && mkdir -p /data /opt/seed && chown agent:agent /data /opt/seed
 

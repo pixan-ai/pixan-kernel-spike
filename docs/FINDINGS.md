@@ -29,6 +29,7 @@ Evidence labels: **Lab** = observed on a real run; **Docs** = from official docu
 | `/start` on the bot shows pairing instructions even when the allowlist is active. | Code |
 | Railway mounts the volume owned by root, so the non-root image could not write `/data`. Fixed with `RAILWAY_RUN_UID=0` plus a privilege drop in `start.sh`; Claude still runs as uid 1001. | Lab |
 | A malformed OAuth token (truncated, or with line breaks from a phone copy) gives no auth error at start: Claude shows "Channels are not currently available" and manual mode, and the bot only shows "typing". `start.sh` now strips whitespace and logs length and prefix, never the value. | Lab |
+| Railway does not allow user namespaces (`bwrap: Creating new namespace failed: Permission denied`). So `CLAUDE_CODE_SUBPROCESS_ENV_SCRUB` and the official sandbox (both need bubblewrap on Linux) cannot run there: a shell command can read the tokens. Mitigated only by soft layers: `deny` rules for env dumps and an `autoMode.hard_deny` rule against reading or sending credentials. | Lab |
 | Railway has no shell into the container; `start.sh` mirrors the readable screen to the service log when it changes. | Lab |
 
 ## Open items
