@@ -4,6 +4,7 @@
 # against an empty /data, with a stub `script` that records what claude would have been started with.
 # CI runs this inside the built image; START points at the entrypoint under test.
 set -uo pipefail
+cd / || exit 1  # the tests empty /data, which can be the working directory of the container
 START=${START:-/usr/local/bin/start.sh}
 STUBS=$(mktemp -d); OUT=$(mktemp); ERR=$(mktemp); FAILS=0
 chmod 755 "$STUBS"; chmod 644 "$OUT" "$ERR"

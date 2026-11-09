@@ -3,6 +3,7 @@
 # Acceptance tests for the managed policy as installed in the image (POLICY): the settings that keep the agent safe and
 # unattended, and the hooks it runs, executed against a stub curl with an empty environment. Run as root inside the image.
 set -uo pipefail
+cd / || exit 1  # the tests empty /data, which can be the working directory of the container
 POLICY=${POLICY:-/etc/claude-code/managed-settings.json}
 CREDS=/data/config/channels/telegram/.env
 STUBS=$(mktemp -d); ARGS=$STUBS/curl.args; FAILS=0
