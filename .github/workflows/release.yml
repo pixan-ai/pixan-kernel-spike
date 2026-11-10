@@ -36,12 +36,18 @@ jobs:
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: .
+          target: base
           push: true
           tags: localhost:5000/pixan-kernel-spike:test
           sbom: true
           provenance: mode=max
           cache-from: type=gha
           cache-to: type=gha,mode=max
+      - name: The published target contains no Claude Code
+        run: |
+          if docker run --rm --entrypoint bash "$IMAGE:test" -c 'command -v claude || ls /home/agent/.local/bin/claude /opt/seed/config 2>/dev/null | grep .'; then
+            echo "the base target must not contain Claude Code or the plugin"; exit 1
+          fi
       - name: The image carries an SBOM and SLSA provenance
         run: |
           docker buildx imagetools inspect "$IMAGE:test" --format '{{json .SBOM}}' | jq -e '[.. | objects | select(has("SPDXID"))] | length > 0'
@@ -96,6 +102,7 @@ jobs:
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: .
+          target: base
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

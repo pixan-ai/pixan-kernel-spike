@@ -1,6 +1,6 @@
 # Lab image and product image
 
-Status: **Option A chosen by the owner (2026-11-10)**: the product image has no Claude Code; the entrypoint installs the pinned official release on first start into the volume. Not built yet.
+Status: **decided by the owner (2026-11-10): one Dockerfile, two targets.** `base` has no Anthropic software and is the only target the release workflow may publish; `agent` (the default, what `docker build .` and Railway produce) adds Claude Code and the official plugin and is never published. This replaces the options below, kept for the record.
 
 ## Two images, two purposes
 
@@ -11,7 +11,7 @@ Status: **Option A chosen by the owner (2026-11-10)**: the product image has no 
 | May be published publicly | **No**: Claude Code is "All rights reserved", used under Anthropic's Commercial Terms | Yes |
 | Purpose | Run the owner's own agent | What a customer downloads |
 
-The `Dockerfile` in this repository is the lab image. Its `release.yml` publish job is locked (`PUBLISH_IMAGE`) so nothing containing Claude Code reaches a public registry by accident.
+Build the agent: `docker build -t my-agent .` Build only the base: `docker build --target base .` The publish job stays locked (`PUBLISH_IMAGE`) until the owner turns it on; when it runs, it pushes `base` only, and CI checks that the pushed image contains no Claude Code.
 
 ## Why the product image has no Claude Code
 
