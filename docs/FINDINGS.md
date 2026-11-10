@@ -47,7 +47,7 @@ Evidence labels: **Lab** = observed on a real run; **Docs** = from official docu
 - 24-hour soak test with a non-expiring key and memory growth.
 - Whether adding `/tmp` to `permissions.additionalDirectories` removes the stall prompt.
 - Zombie detection (Claude alive, Telegram channel dead): no verified signal yet. `start.sh` exits when `claude` exits, which covers a crash but not a hang. Before writing a watchdog, find in a real log what a dead channel looks like (plugin process gone, no `getUpdates` activity); a guessed signal could restart a healthy bot.
-- Scheduled jobs: a design proposal exists in [docs/CRON.md](CRON.md); the open questions there need a lab run.
+- Scheduled jobs are implemented ([docs/CRON.md](CRON.md)); the items under "Not verified yet" there need a lab run.
 - Detecting a second poller on the same bot token (HTTP 409). A `getMe` preflight for revoked tokens exists; 409 only shows up while polling.
 - Attachments: observed on Railway (2026-11-10) that the agent could not read a photo (inbox outside the workspace, read denied). Fixed with `permissions.additionalDirectories`; to be confirmed by sending a photo after the redeploy.
 - Plugin location: `installed_plugins.json` and `known_marketplaces.json` store the absolute build path (reproduced with Claude Code 2.1.322), so after a plain copy the plugin ran from `/opt/seed`. Fixed in `start.sh`; to be confirmed on Railway by checking the path of the running `server.ts` process.

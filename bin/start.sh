@@ -36,6 +36,11 @@ cd "$WS"
 # Opt-in via SCREEN_MIRROR, the seconds between copies: copy the readable screen to the service log when it changes. Off by default: the screen holds the owner's conversation.
 [ -z "${SCREEN_MIRROR:-}" ] || (prev=; while sleep "$SCREEN_MIRROR"; do cur=$(screen.sh 25 2>/dev/null || true); [ "$cur" = "$prev" ] || { printf '%s\n----\n' "$cur" >&2; prev=$cur; }; done) &
 # script = the pty; tail keeps stdin open; stty avoids a 0x0 terminal. The screen is kept in /data/tui.log (see screen.sh).
+# Scheduled jobs: the crontab lives on the volume (seeded once, then the owner's). If the last heartbeat is old, say so: jobs due meanwhile did not run.
+mkdir -p /data/cron && cp -n /opt/seed/crontab /data/cron/crontab
+[ ! -e /data/cron/alive ] || (( $(date +%s) - $(stat -c %Y /data/cron/alive) < 300 )) || notify.sh "Back online. I was down from $(date -r /data/cron/alive '+%F %H:%M') to $(date '+%H:%M'); jobs scheduled in between did not run." || true
+(while touch /data/cron/alive; do sleep 30; done) &
+supercronic -quiet -inotify /data/cron/crontab &
 # A restart continues the last conversation. If claude then dies within a minute, the next start opens a fresh one instead of looping on a session it cannot load.
 C=; ls "$CFG"/projects/*/*.jsonl > /dev/null 2>&1 && [ ! -e /data/fresh ] && C=--continue; rm -f /data/fresh
 tail -f /dev/null | script -qfc "stty cols 120 rows 40; exec claude $C --channels plugin:telegram@claude-plugins-official ${CLAUDE_FLAGS:-}" /data/tui.log > /dev/null || true  # tail dies of SIGPIPE when claude exits; still report it below
