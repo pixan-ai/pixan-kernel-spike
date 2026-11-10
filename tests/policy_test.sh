@@ -32,6 +32,9 @@ for expr in '.channelsEnabled == true' '.disableClaudeAiConnectors == true' '.pr
             '.permissions.denyInsteadOfPrompting == true' '.skipDangerousModePermissionPrompt == true'; do
   check "policy: $expr" setting "$expr"
 done
+# Photos and files from Telegram land in the plugin's inbox, outside the workspace: without this the first Read would prompt, and a prompt is denied.
+inbox_readable() { jq -e --arg d "${TELEGRAM_STATE_DIR:-/data/config/channels/telegram}/inbox" '.permissions.additionalDirectories | index($d) != null' "$POLICY" > /dev/null; }
+check "the agent may read the Telegram inbox (attachments)" inbox_readable
 for rule in 'Read(**/.env)' 'Read(**/.env.*)' 'Edit(//etc/claude-code/**)' 'Edit(//data/config/channels/**)' \
             'Edit(//data/config/plugins/**)' 'Edit(//data/config/settings.json)' 'Bash(printenv)' 'Bash(env)'; do
   check "policy denies $rule" denies "$rule"

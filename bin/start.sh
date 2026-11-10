@@ -13,7 +13,7 @@ fi
 # Then log a sanity check without printing any part of it.
 T="${CLAUDE_CODE_OAUTH_TOKEN:-}"; T="${T//[[:space:]]/}"; [ -z "$T" ] || export CLAUDE_CODE_OAUTH_TOKEN="$T"; [ -z "$T" ] || echo "oauth token: ${#T} chars, starts with sk-ant-oat01-: $([[ "$T" == sk-ant-oat01-* ]] && echo yes || echo NO), whitespace: $([[ "$T" =~ [[:space:]] ]] && echo YES || echo no)" >&2
 CFG=/data/config; TG=$CFG/channels/telegram; WS=/data/workspace
-mkdir -p "$WS" "$TG"
+mkdir -p "$WS" "$TG/inbox"
 cp -rn /opt/seed/config/. "$CFG"/
 # The agent's own instructions (what it cannot do here). Copied once: the owner can edit the copy on the volume.
 [ ! -d /opt/seed/workspace ] || cp -n /opt/seed/workspace/CLAUDE.md "$WS"/
