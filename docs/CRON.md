@@ -1,33 +1,39 @@
-# Persistent scheduled jobs: design proposal
+# Scheduled jobs
 
-Status: proposal, nothing implemented. Requirement from the owner: scheduled jobs must be extremely persistent.
+Jobs survive restarts and redeploys because they are lines in a file on the volume. [Supercronic](https://github.com/aptible/supercronic) (pinned by version and checksum) is the clock; this project adds two small scripts.
 
-## What "persistent" has to survive
+## How it works
 
-1. A container restart or redeploy (the volume survives; the process does not).
-2. A crash of Claude Code (`start.sh` exits, the host restarts the container).
-3. A job that was due while the container was down.
-4. A job that hangs.
+| Piece | What it is |
+|---|---|
+| `/data/cron/crontab` | The schedule. Standard cron syntax, times in the container's `TZ`. Seeded once from `seed/crontab`; then it is the owner's. Edits apply at once |
+| `supercronic` | Runs the lines when they are due. Started by `start.sh` |
+| `job.sh NAME "PROMPT"` | Runs the prompt in a separate Claude session (`claude -p`), sends the answer to the owner on Telegram, alerts the owner if it fails or exceeds `JOB_TIMEOUT` (default 900 s) |
+| `notify.sh TEXT` | One Telegram message to the owner |
+| `/data/workspace/sent.md` | A copy of what jobs sent (last 300 lines). The bot's instructions tell it to read this when the owner refers to something it does not remember sending |
 
-## Proposal
+Example line:
 
-- **Job definitions live on the volume**: `/data/cron/crontab` (standard 5-field syntax) plus `/data/cron/state/<job>.last` (last successful start, written by the runner). Editing the file is the only interface.
-- **One small scheduler process** started by `start.sh` next to Claude (about 15 lines of shell, or the single static binary [Supercronic](https://github.com/aptible/supercronic) if the owner accepts a pinned, checksummed download). It runs each job as the `agent` user with a timeout.
-- **Catch-up on start**: for each job, if the last scheduled time is newer than `<job>.last`, run it once. This is what makes a restart not lose a job.
-- **A job is a prompt**, not a script: the runner calls `claude -p "<prompt>"` with the same credential and policy. Everything stays inside the managed policy; no second code path.
-- **Failures are visible**: a failed or timed-out job sends one Telegram message to the owner (same mechanism as the existing alert hook), never silent.
-- **No overlap**: a lock per job; a hung run is killed at the timeout and reported.
+```
+0 8 * * *  job.sh news "Summarise today's AI news in five bullets"
+```
 
-## Open questions (need the owner or a lab run)
+The seeded file contains one job: a daily recycle at 04:00 (`pkill -x script`). The container restarts and Claude continues the conversation.
 
-- Does `claude -p` with the subscription token work headless inside the container next to a running interactive session? (Not verified.)
-- Does a headless run share the 5-hour subscription window with the interactive bot? Likely yes; a burst of jobs could starve the bot.
-- Supercronic (one more downloaded binary, a supply-chain item) or the shell runner (no dependency, less tested)?
-- Time zone: jobs follow `TZ`.
+## Why a separate session, with its own config directory
 
-## Acceptance tests to write first
+A second Claude started on the bot's config directory would start a second Telegram plugin, and the plugin kills the previous holder of the bot (`bot.pid`): the bot would go deaf while Claude stays alive. Jobs therefore use `/data/cron/config`, where no plugin is installed, and deliver through `notify.sh`.
 
-1. A job due while the container was down runs once after the start.
-2. A job that already ran for its slot does not run twice.
-3. A hung job is killed at its timeout and the owner is alerted.
-4. The scheduler dying makes the entrypoint exit, so the host restarts the container.
+Claude Code's own in-session scheduler is disabled (`CLAUDE_CODE_DISABLE_CRON=1`): its jobs die at the next restart.
+
+## What it does not do
+
+- **It does not run jobs that were due while the container was down.** Instead, a start after more than five minutes without a heartbeat tells the owner from when to when it was down.
+- If `supercronic` itself dies, jobs stop until the next restart (at the latest, the daily recycle).
+
+## Not verified yet (needs the lab)
+
+- `claude -p` with a subscription token, headless, next to the interactive session.
+- Whether jobs share the subscription's usage window with the bot.
+- `--permission-mode auto` for jobs under the managed policy.
+- That `TZ` moves the schedule (the image needs time zone data).

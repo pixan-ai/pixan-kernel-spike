@@ -82,8 +82,11 @@ Dockerfile                    image: Claude Code + official Telegram plugin, non
 compose.yml                   local run, one volume at /data
 bin/start.sh                  entrypoint: seed config, allowlist, pre-accept, run claude in a pty
 bin/screen.sh                 readable view of the Claude screen log
+bin/job.sh                    runs one scheduled prompt and delivers the answer (see docs/CRON.md)
+bin/notify.sh                 one Telegram message to the owner
 bin/denials.sh                loaded policy + tool errors from the latest session
 policy/managed-settings.json  the managed policy and hooks
+seed/crontab                  the schedule seeded on the volume (daily recycle; add your jobs)
 policy/CLAUDE.md              what the agent is told about its limits (managed: root-owned, updated with the image)
 tests/                        acceptance tests (run inside the built image) and docs-vs-code checks
 docs/                         architecture, findings, deployment, threat model, secrets, repository settings, releasing

@@ -25,13 +25,14 @@ chmod 755 "$STUBS/sleep"
 cat > "$STUBS/curl" <<'EOF'
 #!/usr/bin/env bash
 # Stub Telegram: answer getMe with the HTTP status in TG_STATUS (default 200); 000 = no network.
-cat > /dev/null; printf '%s' "${TG_STATUS:-200}"; [ "${TG_STATUS:-200}" != 000 ] || exit 7
+printf '%s\n' "$*" >> /data/curl-calls 2>/dev/null; cat > /dev/null; printf '%s' "${TG_STATUS:-200}"; [ "${TG_STATUS:-200}" != 000 ] || exit 7
 EOF
+printf '#!/usr/bin/env bash\necho "$*" > /data/supercronic-args\n' > "$STUBS/supercronic"; chmod 755 "$STUBS/supercronic"
 chmod 755 "$STUBS/curl"
 
 base_env=(PATH="$STUBS:$PATH" TELEGRAM_BOT_TOKEN=123:abc OWNER_TELEGRAM_ID=42)
 run() {  # run the entrypoint on a fresh, root-owned /data with the given extra env vars
-  pkill -u 1001 2>/dev/null; mkdir -p /data /opt/seed/config; [ -e /opt/seed/config/plugins/installed_plugins.json ] || { mkdir -p /opt/seed/config/plugins; echo '{"installPath":"/opt/seed/config/plugins/cache/x"}' > /opt/seed/config/plugins/installed_plugins.json; }; find /data -mindepth 1 -delete; chown 0:0 /data
+  pkill -u 1001 2>/dev/null; mkdir -p /data /opt/seed/config; [ -e /opt/seed/crontab ] || echo "# seed" > /opt/seed/crontab; [ -e /opt/seed/config/plugins/installed_plugins.json ] || { mkdir -p /opt/seed/config/plugins; echo '{"installPath":"/opt/seed/config/plugins/cache/x"}' > /opt/seed/config/plugins/installed_plugins.json; }; find /data -mindepth 1 -delete; chown 0:0 /data
   env -i "${base_env[@]}" "$@" timeout 20 "$START" >"$OUT" 2>"$ERR"; RC=$?
   pkill -u 1001 2>/dev/null; return 0
 }
@@ -83,6 +84,15 @@ again
 check "...but after dying at once while continuing, the next start is fresh" starts_fresh
 again
 check "...only once: then it continues again" continues
+
+run CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-x
+check "scheduled jobs: the crontab is seeded on the volume" test -s /data/cron/crontab
+check "...and supercronic runs that file" grep -q "/data/cron/crontab" /data/supercronic-args
+echo "# the owner's job" > /data/cron/crontab; again
+check "...a restart keeps the owner's crontab" grep -q "the owner's job" /data/cron/crontab
+check "a quick restart is not reported as downtime" bash -c '! grep -q "Back online" /data/curl-calls'
+touch -d "2 hours ago" /data/cron/alive; again
+check "a start after real downtime tells the owner jobs may have been missed" grep -q "Back online" /data/curl-calls
 
 run ANTHROPIC_API_KEY=dummy-api-key-0123456789ABCDEFGHIJ
 check "API key switch: its last 20 chars are pre-approved" test "$(jq -c '.customApiKeyResponses.approved' /data/config/.claude.json)" = '["0123456789ABCDEFGHIJ"]'
