@@ -24,7 +24,7 @@ chmod 755 "$STUBS/curl"
 
 base_env=(PATH="$STUBS:$PATH" TELEGRAM_BOT_TOKEN=123:abc OWNER_TELEGRAM_ID=42)
 run() {  # run the entrypoint on a fresh, root-owned /data with the given extra env vars
-  pkill -u 1001 2>/dev/null; mkdir -p /data /opt/seed/config; find /data -mindepth 1 -delete; chown 0:0 /data
+  pkill -u 1001 2>/dev/null; mkdir -p /data /opt/seed/config; [ -e /opt/seed/config/plugins/installed_plugins.json ] || { mkdir -p /opt/seed/config/plugins; echo '{"installPath":"/opt/seed/config/plugins/cache/x"}' > /opt/seed/config/plugins/installed_plugins.json; }; find /data -mindepth 1 -delete; chown 0:0 /data
   env -i "${base_env[@]}" "$@" timeout 20 "$START" >"$OUT" 2>"$ERR"; RC=$?
   pkill -u 1001 2>/dev/null; return 0
 }
@@ -58,6 +58,12 @@ run CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-x
 check "screen mirror is off by default: the conversation stays out of the log" bash -c '! grep -q SCREEN-MARKER "$0"' "$ERR"
 run CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-x SCREEN_MIRROR=1
 check "SCREEN_MIRROR=1 copies the screen to the log" grep -q SCREEN-MARKER "$ERR"
+plugin_runs_from_volume() { grep -q /data/config/plugins /data/config/plugins/installed_plugins.json && ! grep -rqs /opt/seed /data/config/plugins/*.json; }
+check "the plugin is registered at its volume copy, not at the image's build path" plugin_runs_from_volume
+touch /data/config/plugins/left-by-an-older-image
+env -i "${base_env[@]}" CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-x timeout 20 "$START" >"$OUT" 2>"$ERR"; pkill -u 1001 2>/dev/null
+check "...and every start replaces it with the image's version" test ! -e /data/config/plugins/left-by-an-older-image
+
 run ANTHROPIC_API_KEY=dummy-api-key-0123456789ABCDEFGHIJ
 check "API key switch: its last 20 chars are pre-approved" test "$(jq -c '.customApiKeyResponses.approved' /data/config/.claude.json)" = '["0123456789ABCDEFGHIJ"]'
 
