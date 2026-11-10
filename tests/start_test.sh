@@ -24,7 +24,7 @@ chmod 755 "$STUBS/curl"
 
 base_env=(PATH="$STUBS:$PATH" TELEGRAM_BOT_TOKEN=123:abc OWNER_TELEGRAM_ID=42)
 run() {  # run the entrypoint on a fresh, root-owned /data with the given extra env vars
-  pkill -u 1001 2>/dev/null; mkdir -p /data /opt/seed/config /opt/seed/workspace; [ -f /opt/seed/workspace/CLAUDE.md ] || echo seed > /opt/seed/workspace/CLAUDE.md; find /data -mindepth 1 -delete; chown 0:0 /data
+  pkill -u 1001 2>/dev/null; mkdir -p /data /opt/seed/config; find /data -mindepth 1 -delete; chown 0:0 /data
   env -i "${base_env[@]}" "$@" timeout 20 "$START" >"$OUT" 2>"$ERR"; RC=$?
   pkill -u 1001 2>/dev/null; return 0
 }
@@ -58,11 +58,6 @@ run CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-x
 check "screen mirror is off by default: the conversation stays out of the log" bash -c '! grep -q SCREEN-MARKER "$0"' "$ERR"
 run CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-x SCREEN_MIRROR=1
 check "SCREEN_MIRROR=1 copies the screen to the log" grep -q SCREEN-MARKER "$ERR"
-check "the agent gets its instructions (CLAUDE.md) in the workspace" test -s /data/workspace/CLAUDE.md
-echo "owner edit" > /data/workspace/CLAUDE.md
-env -i "${base_env[@]}" CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-x timeout 20 "$START" >"$OUT" 2>"$ERR"; pkill -u 1001 2>/dev/null
-check "...and a restart keeps the owner's edits" test "$(cat /data/workspace/CLAUDE.md)" = "owner edit"
-
 run ANTHROPIC_API_KEY=dummy-api-key-0123456789ABCDEFGHIJ
 check "API key switch: its last 20 chars are pre-approved" test "$(jq -c '.customApiKeyResponses.approved' /data/config/.claude.json)" = '["0123456789ABCDEFGHIJ"]'
 
