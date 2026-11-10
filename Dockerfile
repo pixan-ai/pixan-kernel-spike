@@ -10,9 +10,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certifi
  && useradd -m -u 1001 agent && mkdir -p /data /opt/seed && chown agent:agent /data /opt/seed
 
 # Managed policy: owned by root, not editable by the agent, highest precedence in Claude Code.
-COPY policy/managed-settings.json /etc/claude-code/managed-settings.json
+COPY policy/ /etc/claude-code/
 COPY --chmod=755 bin/ /usr/local/bin/
-COPY --chown=agent:agent workspace/ /opt/seed/workspace/
 
 USER 1001
 ENV DISABLE_AUTOUPDATER=1 CLAUDE_CONFIG_DIR=/data/config TELEGRAM_STATE_DIR=/data/config/channels/telegram CLAUDE_CODE_ENABLE_PROMPT_SUGGESTION=false
