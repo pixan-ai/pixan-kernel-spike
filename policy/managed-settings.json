@@ -4,6 +4,7 @@
   "disableClaudeAiConnectors": true,
   "permissions": {
     "denyInsteadOfPrompting": true,
+    "additionalDirectories": ["/data/config/channels/telegram/inbox"],
     "deny": [
       "Read(**/.env)",
       "Read(**/.env.*)",
