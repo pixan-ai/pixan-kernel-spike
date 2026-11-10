@@ -36,5 +36,9 @@ cd "$WS"
 # Opt-in via SCREEN_MIRROR, the seconds between copies: copy the readable screen to the service log when it changes. Off by default: the screen holds the owner's conversation.
 [ -z "${SCREEN_MIRROR:-}" ] || (prev=; while sleep "$SCREEN_MIRROR"; do cur=$(screen.sh 25 2>/dev/null || true); [ "$cur" = "$prev" ] || { printf '%s\n----\n' "$cur" >&2; prev=$cur; }; done) &
 # script = the pty; tail keeps stdin open; stty avoids a 0x0 terminal. The screen is kept in /data/tui.log (see screen.sh).
-tail -f /dev/null | script -qfc "stty cols 120 rows 40; exec claude --channels plugin:telegram@claude-plugins-official ${CLAUDE_FLAGS:-}" /data/tui.log > /dev/null || true  # tail dies of SIGPIPE when claude exits; still report it below
+# A restart continues the last conversation. If claude then dies within a minute, the next start opens a fresh one instead of looping on a session it cannot load.
+C=; ls "$CFG"/projects/*/*.jsonl > /dev/null 2>&1 && [ ! -e /data/fresh ] && C=--continue; rm -f /data/fresh
+tail -f /dev/null | script -qfc "stty cols 120 rows 40; exec claude $C --channels plugin:telegram@claude-plugins-official ${CLAUDE_FLAGS:-}" /data/tui.log > /dev/null || true  # tail dies of SIGPIPE when claude exits; still report it below
+[ -z "$C" ] || (( SECONDS > 60 )) || touch /data/fresh
+(( SECONDS > 60 )) || sleep 60  # crash-loop brake: do not hammer the APIs with restarts
 echo "claude exited" >&2; exit 1

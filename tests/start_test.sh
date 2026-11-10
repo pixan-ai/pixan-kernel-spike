@@ -15,6 +15,13 @@ cat > "$STUBS/script" <<'EOF'
 echo "owner said: SCREEN-MARKER" > /data/tui.log; sleep 3  # long enough for a 1 s mirror to fire
 EOF
 chmod 755 "$STUBS/script"
+cat > "$STUBS/sleep" <<'EOF'
+#!/usr/bin/env bash
+# Stub the 60 s crash-loop brake (record it, return at once); every other sleep is real.
+[ "$1" != 60 ] || { echo braked > /data/braked; exit 0; }
+exec /bin/sleep "$@"
+EOF
+chmod 755 "$STUBS/sleep"
 cat > "$STUBS/curl" <<'EOF'
 #!/usr/bin/env bash
 # Stub Telegram: answer getMe with the HTTP status in TG_STATUS (default 200); 000 = no network.
@@ -34,7 +41,7 @@ check() {  # check "description" command...
 }
 probe() { grep -qx "$1" /data/probe 2>/dev/null; }
 token_not_logged() { ! grep -q "abcdef" "$ERR"; }
-channel_started() { grep -q "^cmd=.*exec claude --channels plugin:telegram@claude-plugins-official" /data/probe; }
+channel_started() { grep -q "^cmd=.*exec claude .*--channels plugin:telegram@claude-plugins-official" /data/probe; }
 creds_file_ok() { grep -qx "TELEGRAM_BOT_TOKEN=123:abc" "$1" && grep -qx "OWNER_TELEGRAM_ID=42" "$1"; }
 rejected_by_telegram() { test "$RC" = 1 && grep -q "Telegram rejected TELEGRAM_BOT_TOKEN" "$ERR"; }
 failed_fast_on_bot_token() { test "$RC" = 1 && grep -q "TELEGRAM_BOT_TOKEN" "$ERR" && test ! -e /data/probe; }
@@ -63,6 +70,19 @@ check "the plugin is registered at its volume copy, not at the image's build pat
 touch /data/config/plugins/left-by-an-older-image
 env -i "${base_env[@]}" CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-x timeout 20 "$START" >"$OUT" 2>"$ERR"; pkill -u 1001 2>/dev/null
 check "...and every start replaces it with the image's version" test ! -e /data/config/plugins/left-by-an-older-image
+
+again() { env -i "${base_env[@]}" CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-x timeout 20 "$START" >"$OUT" 2>"$ERR"; pkill -u 1001 2>/dev/null; return 0; }
+continues() { grep -q "^cmd=.*exec claude --continue " /data/probe; }
+starts_fresh() { ! grep -q -- "--continue" /data/probe; }
+run CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-x
+check "first start: nothing to continue" starts_fresh
+check "claude dying within a minute -> crash-loop brake" test -e /data/braked
+mkdir -p /data/config/projects/-data-workspace && touch /data/config/projects/-data-workspace/s.jsonl; again
+check "restart with a past session -> continues the conversation" continues
+again
+check "...but after dying at once while continuing, the next start is fresh" starts_fresh
+again
+check "...only once: then it continues again" continues
 
 run ANTHROPIC_API_KEY=dummy-api-key-0123456789ABCDEFGHIJ
 check "API key switch: its last 20 chars are pre-approved" test "$(jq -c '.customApiKeyResponses.approved' /data/config/.claude.json)" = '["0123456789ABCDEFGHIJ"]'
