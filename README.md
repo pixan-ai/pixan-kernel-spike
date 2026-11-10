@@ -48,6 +48,8 @@ See [docs/DEPLOY-RAILWAY.md](docs/DEPLOY-RAILWAY.md). The Dockerfile deploys as 
 | `ANTHROPIC_API_KEY` | one of the two | Console API key, billed per use. Takes precedence if both are set |
 | `TELEGRAM_BOT_TOKEN` | yes | Bot token, read by the official plugin |
 | `OWNER_TELEGRAM_ID` | yes | Only this user can talk to the bot (allowlist) |
+| `PEER_PUBLIC_KEYS` | no | Public SSH keys of fellow agents allowed to read this agent's screen (see [docs/PEERS.md](docs/PEERS.md)). Unset = no SSH server |
+| `PEER_SSH_KEY` | no | Private SSH key this agent uses to look at fellow agents |
 | `SCREEN_MIRROR` | no | Seconds between copies of the readable screen to the service log (e.g. `30`). Unset = off. The screen contains your conversation: enable only to debug |
 | `CLAUDE_FLAGS` | no | Extra `claude` flags. Empty = default interactive mode (auto mode) |
 | `ANTHROPIC_MODEL` | no | Pin the model. Unpinned, the model can differ between sessions |
@@ -83,6 +85,7 @@ compose.yml                   local run, one volume at /data
 bin/start.sh                  entrypoint: seed config, allowlist, pre-accept, run claude in a pty
 bin/screen.sh                 readable view of the Claude screen log
 bin/job.sh                    runs one scheduled prompt and delivers the answer (see docs/CRON.md)
+bin/peer.sh                   read-only view for fellow agents over SSH (see docs/PEERS.md)
 bin/notify.sh                 one Telegram message to the owner
 bin/denials.sh                loaded policy + tool errors from the latest session
 policy/managed-settings.json  the managed policy and hooks

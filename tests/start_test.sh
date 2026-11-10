@@ -28,6 +28,7 @@ cat > "$STUBS/curl" <<'EOF'
 printf '%s\n' "$*" >> /data/curl-calls 2>/dev/null; cat > /dev/null; printf '%s' "${TG_STATUS:-200}"; [ "${TG_STATUS:-200}" != 000 ] || exit 7
 EOF
 printf '#!/usr/bin/env bash\necho "$*" > /data/supercronic-args\n' > "$STUBS/supercronic"; chmod 755 "$STUBS/supercronic"
+printf '#!/usr/bin/env bash\necho "$*" > /data/peer-args\n' > "$STUBS/peer.sh"; chmod 755 "$STUBS/peer.sh"
 chmod 755 "$STUBS/curl"
 
 base_env=(PATH="$STUBS:$PATH" TELEGRAM_BOT_TOKEN=123:abc OWNER_TELEGRAM_ID=42)
@@ -93,6 +94,11 @@ check "...a restart keeps the owner's crontab" grep -q "the owner's job" /data/c
 check "a quick restart is not reported as downtime" bash -c '! grep -q "Back online" /data/curl-calls'
 touch -d "2 hours ago" /data/cron/alive; again
 check "a start after real downtime tells the owner jobs may have been missed" grep -q "Back online" /data/curl-calls
+
+check "peer view is off by default: no SSH server" test ! -e /data/peer-args
+run CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-x PEER_PUBLIC_KEYS="ssh-ed25519 AAAA friend" PEER_SSH_KEY="PRIVATE-KEY-BODY"
+check "PEER_PUBLIC_KEYS starts the peer view" grep -qx serve /data/peer-args
+check "PEER_SSH_KEY is stored for looking at others, private (600)" test "$(stat -c %a /data/ssh/peer_key)$(cat /data/ssh/peer_key)" = "600PRIVATE-KEY-BODY"
 
 run ANTHROPIC_API_KEY=dummy-api-key-0123456789ABCDEFGHIJ
 check "API key switch: its last 20 chars are pre-approved" test "$(jq -c '.customApiKeyResponses.approved' /data/config/.claude.json)" = '["0123456789ABCDEFGHIJ"]'
