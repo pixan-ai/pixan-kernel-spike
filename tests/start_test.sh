@@ -12,6 +12,7 @@ cat > "$STUBS/script" <<'EOF'
 #!/usr/bin/env bash
 # Stub pty: record who would run claude, with which credentials and command, then "exit" like claude dying.
 { echo "uid=$(id -u)"; echo "oauth=${CLAUDE_CODE_OAUTH_TOKEN:-}"; echo "cmd=$2"; } > /data/probe
+echo "owner said: SCREEN-MARKER" > /data/tui.log; sleep 3  # long enough for a 1 s mirror to fire
 EOF
 chmod 755 "$STUBS/script"
 
@@ -45,6 +46,11 @@ check "plugin credentials file holds token and owner" creds_file_ok /data/config
 check "only the owner is allowlisted" test "$(jq -c '[.dmPolicy, .allowFrom]' /data/config/channels/telegram/access.json)" = '["allowlist",["42"]]'
 check "no API key -> nothing pre-approved" test "$(jq -c '.customApiKeyResponses // "none"' /data/config/.claude.json)" = '"none"'
 check "workspace trusted and onboarding done" test "$(jq -c '[.hasCompletedOnboarding, .projects["/data/workspace"].hasTrustDialogAccepted]' /data/config/.claude.json)" = '[true,true]'
+
+run CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-x
+check "screen mirror is off by default: the conversation stays out of the log" bash -c '! grep -q SCREEN-MARKER "$0"' "$ERR"
+run CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-x SCREEN_MIRROR=1
+check "SCREEN_MIRROR=1 copies the screen to the log" grep -q SCREEN-MARKER "$ERR"
 
 run ANTHROPIC_API_KEY=dummy-api-key-0123456789ABCDEFGHIJ
 check "API key switch: its last 20 chars are pre-approved" test "$(jq -c '.customApiKeyResponses.approved' /data/config/.claude.json)" = '["0123456789ABCDEFGHIJ"]'
