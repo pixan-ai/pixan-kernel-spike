@@ -7,6 +7,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 ### Changed
 
 - Docs: the security level is stated per host (**Railway: soft floor only**) in README and SECURITY.md, with the namespace check for hosts that can do better.
+- The base image is pinned by digest; a test fails on an unpinned `FROM`.
 
 ### Added
 
