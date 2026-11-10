@@ -84,7 +84,7 @@ bin/screen.sh                 readable view of the Claude screen log
 bin/denials.sh                loaded policy + tool errors from the latest session
 policy/managed-settings.json  the managed policy and hooks
 tests/                        acceptance tests (run inside the built image) and docs-vs-code checks
-docs/                         architecture, findings, deployment, threat model, secrets, repository settings
+docs/                         architecture, findings, deployment, threat model, secrets, repository settings, releasing
 .github/                      CI, issue and PR templates, Dependabot
 ```
 
