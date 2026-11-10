@@ -1,6 +1,6 @@
 # Lab image and product image
 
-Status: proposal for the owner's decision. Nothing here is built yet.
+Status: **Option A chosen by the owner (2026-11-10)**: the product image has no Claude Code; the entrypoint installs the pinned official release on first start into the volume. Not built yet.
 
 ## Two images, two purposes
 
