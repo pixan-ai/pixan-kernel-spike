@@ -68,7 +68,7 @@ Defense in depth, each layer using an official mechanism:
 Known limits (read before trusting it):
 
 - `deny` rules are enforced for Claude's file tools. For the shell it depends on how a command is written: Claude Code recognises some commands (`cat`, redirections) but not a script or `grep -r` that opens a file itself. Treat the shell as unconstrained. A hard floor needs OS-level controls (file permissions, sandbox).
-- On **Railway** there is no hard isolation for the shell: it blocks the user namespaces that the env scrub and the sandbox need, so a shell command can read the tokens. Only the `deny` rules and the auto mode `hard_deny` rule stand in the way (soft layers). A host that allows namespaces is needed for a hard floor.
+- **Security level on Railway: soft floor only.** There is no hard isolation for the shell: it blocks the user namespaces that the env scrub and the sandbox need, so a shell command can read the tokens. Only the `deny` rules and the auto mode `hard_deny` rule stand in the way (soft layers). A host that allows namespaces is needed for a hard floor: see [Hardening by host](docs/THREAT-MODEL.md#hardening-by-host).
 - There is **no egress control** by default. An allowed shell can reach any host. A network allowlist is not included yet.
 - The alert hook is reactive: it fires when a turn fails, not on a timer.
 

@@ -22,6 +22,11 @@ Only the latest commit on `main` and, once there is one, the latest tagged relea
 In scope: the Dockerfile, `bin/*`, `policy/managed-settings.json`, the CI workflows and the documentation claims about them.
 Out of scope: vulnerabilities in Claude Code or the official Telegram plugin (report those to Anthropic).
 
+## Security level by host
+
+- **Railway (the reference deployment): soft floor only.** Policy rules and the auto-mode classifier are the only barriers; the platform blocks the user namespaces that the environment scrub and the sandbox need, so a shell command run by the agent can read the container's environment. Do not give such a deployment credentials you cannot afford to rotate. Verified in the lab; see [docs/THREAT-MODEL.md](docs/THREAT-MODEL.md).
+- **A VM, server or local Docker that allows user namespaces:** a hard floor is possible (`CLAUDE_CODE_SUBPROCESS_ENV_SCRUB=1`, Claude Code's sandbox, an egress firewall). Not tested in this project yet; follow Anthropic's current documentation and treat it as unverified until you have tried it.
+
 ## Handling secrets
 
 - Secrets are passed as environment variables at run time and are never baked into the image. See [docs/SECRETS.md](docs/SECRETS.md) for the inventory and how to rotate them.

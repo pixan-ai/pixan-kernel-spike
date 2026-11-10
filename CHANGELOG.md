@@ -4,6 +4,10 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 
 ## [Unreleased]
 
+### Changed
+
+- Docs: the security level is stated per host (**Railway: soft floor only**) in README and SECURITY.md, with the namespace check for hosts that can do better.
+
 ### Added
 
 - Claude Code on Telegram in one container: the official harness in a `script` pty, the official Telegram channel plugin, a root-owned managed policy.
