@@ -25,4 +25,10 @@ check "no workflow reads untrusted event data" absent 'github\.(head_ref|event\.
 count() { grep -h -- "$1" .github/workflows/*.yml | grep -c ''; }
 check "every checkout drops its credentials" test "$(count 'uses: actions/checkout@')" = "$(count 'persist-credentials: false')"
 
+# Only the `base` target (no Anthropic software) may leave the build machine.
+pushes=$(grep -c 'push: true' .github/workflows/release.yml); based=$(grep -B1 'push: true' .github/workflows/release.yml | grep -c 'target: base')
+check "every image push in the release workflow builds the base target" test "$pushes" -gt 0 -a "$pushes" = "$based"
+check "the Dockerfile's default (last) target is the agent, built from base" test "$(grep -E '^FROM ' Dockerfile | tail -1 | grep -c 'FROM base AS agent$')" = 1
+check "Claude Code is installed only after the base target" test -z "$(sed '/^FROM base AS agent$/,$d' Dockerfile | grep -iE 'claude\.ai/install|claude plugin')"
+
 echo "$FAILS failed"; exit $((FAILS > 0))
