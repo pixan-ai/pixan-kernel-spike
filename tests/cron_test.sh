@@ -45,6 +45,7 @@ check "...and records nothing as sent" test ! -e /data/workspace/sent.md
 fresh; job CLAUDE_STUB=hang JOB_TIMEOUT=1
 check "a hung job is killed at its timeout and the owner is alerted" sent_to_owner 'Scheduled job "news" failed'
 
+check "the daily recycle's command (pkill) exists" command -v pkill
 if command -v supercronic > /dev/null; then
   check "the seeded crontab is valid for supercronic" supercronic -quiet -test "${CRONTAB:-/opt/seed/crontab}"
 fi

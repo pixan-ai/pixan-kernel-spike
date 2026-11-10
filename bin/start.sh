@@ -36,6 +36,9 @@ cd "$WS"
 # Opt-in via SCREEN_MIRROR, the seconds between copies: copy the readable screen to the service log when it changes. Off by default: the screen holds the owner's conversation.
 [ -z "${SCREEN_MIRROR:-}" ] || (prev=; while sleep "$SCREEN_MIRROR"; do cur=$(screen.sh 25 2>/dev/null || true); [ "$cur" = "$prev" ] || { printf '%s\n----\n' "$cur" >&2; prev=$cur; }; done) &
 # script = the pty; tail keeps stdin open; stty avoids a 0x0 terminal. The screen is kept in /data/tui.log (see screen.sh).
+# Opt-in peer view (docs/PEERS.md): fellow agents whose public keys are listed may read this agent's screen; PEER_SSH_KEY lets this one look at others.
+(umask 077; mkdir -p /data/ssh; [ -z "${PEER_SSH_KEY:-}" ] || printf '%s\n' "$PEER_SSH_KEY" > /data/ssh/peer_key)
+[ -z "${PEER_PUBLIC_KEYS:-}" ] || peer.sh serve
 # Scheduled jobs: the crontab lives on the volume (seeded once, then the owner's). If the last heartbeat is old, say so: jobs due meanwhile did not run.
 mkdir -p /data/cron && cp -n /opt/seed/crontab /data/cron/crontab
 [ ! -e /data/cron/alive ] || (( $(date +%s) - $(stat -c %Y /data/cron/alive) < 300 )) || notify.sh "Back online. I was down from $(date -r /data/cron/alive '+%F %H:%M') to $(date '+%H:%M'); jobs scheduled in between did not run." || true

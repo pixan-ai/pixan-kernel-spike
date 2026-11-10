@@ -17,6 +17,8 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 
 ### Added
 
+- Peer view (opt-in): a fellow agent holding a listed key can read this agent's screen, status and denials over SSH with a forced command; nothing else. See docs/PEERS.md.
+- `procps` in the image: the seeded daily recycle uses `pkill`.
 - Scheduled jobs that survive restarts: a crontab on the volume run by Supercronic (pinned), `job.sh` (a prompt in its own Claude session, answer sent to the owner and kept in `sent.md`, alert on failure or timeout), a downtime notice at start, and a daily recycle at 04:00. Claude Code's in-session scheduler is disabled. See docs/CRON.md.
 - The agent gets a `CLAUDE.md` in its workspace stating its limits (denied prompts, no credentials, connectors disabled, only `/data` persists). Copied once; the owner can edit the copy.
 - Claude Code on Telegram in one container: the official harness in a `script` pty, the official Telegram channel plugin, a root-owned managed policy.
