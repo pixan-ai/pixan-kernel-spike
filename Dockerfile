@@ -20,6 +20,7 @@ ENTRYPOINT ["/usr/local/bin/start.sh"]
 
 FROM base AS agent
 ARG CLAUDE_CODE_VERSION=2.1.319
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN curl -fsSL https://claude.ai/install.sh | bash -s "${CLAUDE_CODE_VERSION}" \
  && /home/agent/.local/bin/claude --version
 ENV PATH="/home/agent/.local/bin:${PATH}"
