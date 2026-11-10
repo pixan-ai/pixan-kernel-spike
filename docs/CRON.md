@@ -31,9 +31,15 @@ Claude Code's own in-session scheduler is disabled (`CLAUDE_CODE_DISABLE_CRON=1`
 - **It does not run jobs that were due while the container was down.** Instead, a start after more than five minutes without a heartbeat tells the owner from when to when it was down.
 - If `supercronic` itself dies, jobs stop until the next restart (at the latest, the daily recycle).
 
-## Not verified yet (needs the lab)
+## Verified on Railway (2026-11-10)
 
-- `claude -p` with a subscription token, headless, next to the interactive session.
+- A job the bot scheduled itself ran three minutes later with the subscription token, headless, next to the interactive session, and its message reached the owner.
+- The bot then answered "what did you just send me?" correctly from `sent.md`, and removed the one-off line from the crontab.
+- Times follow `TZ` (Supercronic logs in -06:00; the message said 9:01 CST).
+- After a redeploy the bot continued the conversation (it listed the attachments sent the night before).
+
+## Not verified yet
+
 - Whether jobs share the subscription's usage window with the bot.
-- `--permission-mode auto` for jobs under the managed policy.
-- That `TZ` moves the schedule (the image needs time zone data).
+- The daily recycle (`pkill -x script` at 04:00): check the service log the morning after.
+- The downtime notice after a real outage, and a failing or hung job in production.
