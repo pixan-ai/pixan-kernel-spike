@@ -15,6 +15,12 @@ cat > "$STUBS/script" <<'EOF'
 echo "owner said: SCREEN-MARKER" > /data/tui.log; sleep 3  # long enough for a 1 s mirror to fire
 EOF
 chmod 755 "$STUBS/script"
+cat > "$STUBS/curl" <<'EOF'
+#!/usr/bin/env bash
+# Stub Telegram: answer getMe with the HTTP status in TG_STATUS (default 200); 000 = no network.
+cat > /dev/null; printf '%s' "${TG_STATUS:-200}"; [ "${TG_STATUS:-200}" != 000 ] || exit 7
+EOF
+chmod 755 "$STUBS/curl"
 
 base_env=(PATH="$STUBS:$PATH" TELEGRAM_BOT_TOKEN=123:abc OWNER_TELEGRAM_ID=42)
 run() {  # run the entrypoint on a fresh, root-owned /data with the given extra env vars
@@ -30,6 +36,7 @@ probe() { grep -qx "$1" /data/probe 2>/dev/null; }
 token_not_logged() { ! grep -q "abcdef" "$ERR"; }
 channel_started() { grep -q "^cmd=.*exec claude --channels plugin:telegram@claude-plugins-official" /data/probe; }
 creds_file_ok() { grep -qx "TELEGRAM_BOT_TOKEN=123:abc" "$1" && grep -qx "OWNER_TELEGRAM_ID=42" "$1"; }
+rejected_by_telegram() { test "$RC" = 1 && grep -q "Telegram rejected TELEGRAM_BOT_TOKEN" "$ERR"; }
 failed_fast_on_bot_token() { test "$RC" = 1 && grep -q "TELEGRAM_BOT_TOKEN" "$ERR" && test ! -e /data/probe; }
 
 run CLAUDE_CODE_OAUTH_TOKEN=$'sk-ant-oat01-abc\n def\r\n'
@@ -59,6 +66,12 @@ run
 check "no Claude credential -> fails fast" test "$RC" = 1
 check "...naming both options" grep -q "CLAUDE_CODE_OAUTH_TOKEN or ANTHROPIC_API_KEY" "$ERR"
 check "...before starting claude" test ! -e /data/probe
+
+run CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-x TG_STATUS=401
+check "Telegram rejects the bot token (401) -> fails fast, says so" rejected_by_telegram
+check "...before starting claude" test ! -e /data/probe
+run CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-x TG_STATUS=000
+check "Telegram unreachable -> still starts (a hiccup is not a verdict)" probe "uid=1001"
 
 base_env=(PATH="$STUBS:$PATH" OWNER_TELEGRAM_ID=42)
 run CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-x
