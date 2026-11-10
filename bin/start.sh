@@ -15,6 +15,9 @@ T="${CLAUDE_CODE_OAUTH_TOKEN:-}"; T="${T//[[:space:]]/}"; [ -z "$T" ] || export 
 CFG=/data/config; TG=$CFG/channels/telegram; WS=/data/workspace
 mkdir -p "$WS" "$TG/inbox"
 cp -rn /opt/seed/config/. "$CFG"/
+# The plugin must run from the volume copy (the one the policy protects), and a new image must replace it:
+# its registry files carry the absolute build path, so copy it fresh at every start and point them at the volume.
+rm -rf "$CFG/plugins" && cp -r /opt/seed/config/plugins "$CFG/" && sed -i "s#/opt/seed/config#$CFG#g" "$CFG"/plugins/*.json
 # Only the owner can talk to the bot (first start only; afterwards the owner edits it on the volume).
 [ -f "$TG/access.json" ] || printf '{"dmPolicy":"allowlist","allowFrom":["%s"],"groups":{},"pending":{}}\n' "$OWNER_TELEGRAM_ID" > "$TG/access.json"
 # The plugin and the alert hook read the bot credentials from this file (ready for an env scrub on hosts that allow it).
