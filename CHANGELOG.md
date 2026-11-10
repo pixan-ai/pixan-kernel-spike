@@ -12,6 +12,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 
 ### Added
 
+- The agent gets a `CLAUDE.md` in its workspace stating its limits (denied prompts, no credentials, connectors disabled, only `/data` persists). Copied once; the owner can edit the copy.
 - Claude Code on Telegram in one container: the official harness in a `script` pty, the official Telegram channel plugin, a root-owned managed policy.
 - Credential: a Claude subscription token (`CLAUDE_CODE_OAUTH_TOKEN`) or an API key (`ANTHROPIC_API_KEY`).
 - Railway support: volume ownership handled by the entrypoint (`RAILWAY_RUN_UID=0`), screen mirror to the service log (opt-in, see Changed).
