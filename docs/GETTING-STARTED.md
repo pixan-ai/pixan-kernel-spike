@@ -36,7 +36,7 @@ Copy the value with a copy button, not by selecting text: a truncated token give
 
 5. Press **Deploy** (variables stay pending until you do).
 
-Details and notes: [DEPLOY-RAILWAY.md](DEPLOY-RAILWAY.md). Cost: an agent that is always on uses about 0.3 to 0.7 GB of memory, billed by the minute.
+Details and notes: [DEPLOY-RAILWAY.md](DEPLOY-RAILWAY.md). Cost: an agent that is always on uses about 0.3 to 0.7 GB of memory, billed by the minute. To pay only while it works, see [SLEEP.md](SLEEP.md).
 
 ### Your own server or computer (Docker)
 

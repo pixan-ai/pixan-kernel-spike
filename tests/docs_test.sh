@@ -11,7 +11,8 @@ exists() { [ -e "$1" ]; }
 
 # Configuration the entrypoint takes from the environment = variables it reads but never assigns itself.
 refs=$(grep -oE '\$\{?[A-Z][A-Z0-9_]*' bin/start.sh | tr -d '${' | sort -u)
-assigned=$(grep -oE '(^|;[[:space:]]*|\()[A-Z][A-Z0-9_]*=' bin/start.sh | sed -E 's/^[;(]//; s/^[[:space:]]+//; s/=$//' | sort -u)
+# Assigned by the script itself (also on an indented line), or a shell built-in such as SECONDS.
+assigned=$({ grep -oE '(^[[:space:]]*|;[[:space:]]*|\()[A-Z][A-Z0-9_]*=' bin/start.sh | sed -E 's/^[;(]//; s/^[[:space:]]+//; s/=$//'; echo SECONDS; } | sort -u)
 inputs=$(comm -23 <(printf '%s\n' "$refs") <(printf '%s\n' "$assigned"))
 # Consumed by Claude Code or the OS, not by start.sh, but documented for the user.
 known=$(printf '%s\n' "$inputs" ANTHROPIC_MODEL TZ)
