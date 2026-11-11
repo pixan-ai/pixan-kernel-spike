@@ -13,7 +13,7 @@ chmod 755 "$STUBS"; chmod 644 "$OUT" "$ERR"
 cat > "$STUBS/script" <<'EOF'
 #!/usr/bin/env bash
 # Stub pty: record who would run claude, with which credentials and command, then "exit" like claude dying.
-{ echo "uid=$(id -u)"; echo "oauth=${CLAUDE_CODE_OAUTH_TOKEN:-}"; echo "bottoken=${TELEGRAM_BOT_TOKEN:-}"; echo "backupsecrets=${RCLONE_CONF:-}${BACKUP_AGE_KEY:-}"; echo "cmd=$2"; } > /data/probe
+{ echo "uid=$(id -u)"; echo "oauth=${CLAUDE_CODE_OAUTH_TOKEN:-}"; echo "bottoken=${TELEGRAM_BOT_TOKEN:-}"; echo "backupsecrets=${RCLONE_CONF:-}${BACKUP_AGE_KEY:-}"; echo "cmd=$2"; echo "dreamt=$(cat /data/dream-runs 2> /dev/null)"; } > /data/probe
 echo "owner said: SCREEN-MARKER" > /data/tui.log; sleep 3  # long enough for a 1 s mirror to fire
 EOF
 chmod 755 "$STUBS/script"
@@ -35,6 +35,7 @@ EOF
 printf '#!/usr/bin/env bash\necho "$*" > /data/supercronic-args\n' > "$STUBS/supercronic"; chmod 755 "$STUBS/supercronic"
 printf '#!/usr/bin/env bash\necho "$*" > /data/peer-args\n' > "$STUBS/peer.sh"; chmod 755 "$STUBS/peer.sh"
 printf '#!/usr/bin/env bash\necho "$*" >> /data/backup-args\n' > "$STUBS/backup.sh"; chmod 755 "$STUBS/backup.sh"
+printf '#!/usr/bin/env bash\necho yes > /data/dream-runs\n' > "$STUBS/dream.sh"; chmod 755 "$STUBS/dream.sh"
 printf '#!/usr/bin/env bash\necho rang >> /data/doorbell-runs\n' > "$STUBS/doorbell.sh"; chmod 755 "$STUBS/doorbell.sh"
 chmod 755 "$STUBS/curl"
 
@@ -84,6 +85,7 @@ check "first start: nothing to continue" starts_fresh
 check "claude dying within a minute -> crash-loop brake" test -e /data/braked
 mkdir -p /data/config/projects/-data-workspace && touch /data/config/projects/-data-workspace/s.jsonl; again
 check "restart with a past session -> continues the conversation" continues
+check "the daily dream gets its turn before Claude starts" grep -qx "dreamt=yes" /data/probe
 again
 check "...but after dying at once while continuing, the next start is fresh" starts_fresh
 again
