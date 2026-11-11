@@ -33,9 +33,13 @@ Claude Code's own in-session scheduler is disabled (`CLAUDE_CODE_DISABLE_CRON=1`
 - Times follow `TZ` (Supercronic logs in -06:00; the message said 9:01 CST).
 - After a redeploy the bot continued the conversation (it listed the attachments sent the night before).
 
+## Verified on Railway (2026-11-10, after the audit fixes)
+
+- A job added with `config.sh job` ran, delivered in private, and was dropped by the agent afterwards; another delivered to a group the agent is in.
+- The `UserPromptSubmit` hook fires for messages that arrive through the Telegram channel: asked what context came with the owner's message, the agent described the note and the delivery it listed. A follow-up question about a job's message ("even if it is completely cut off?") was answered correctly with no other context.
+
 ## Not verified yet
 
-- Whether the `UserPromptSubmit` hook fires for messages that arrive through the Telegram channel. If it does not, the agent still has the file and its instructions.
 - Whether jobs share the subscription's usage window with the bot.
 - The daily recycle (`pkill -x script` at 04:00): check the service log the morning after.
 - On Railway (2026-11-10): a job added with `config.sh job` ran and was dropped by the agent afterwards. A job meant for a group failed, because jobs could only reach the owner and the job's session looked for a tool to send with; fixed, to be re-tested.
