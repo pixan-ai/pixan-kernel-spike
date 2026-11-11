@@ -28,7 +28,8 @@ run_hook() {  # run_hook JQ-PATH-TO-COMMAND STDIN-JSON: runs the hook with an em
 check "the policy is valid JSON" setting .
 check "the agent's instructions are managed: next to the policy, out of its reach" test -s "$(dirname "$POLICY")/CLAUDE.md"
 for expr in '.channelsEnabled == true' '.disableClaudeAiConnectors == true' '.promptSuggestionEnabled == false' \
-            '.permissions.denyInsteadOfPrompting == true' '.skipDangerousModePermissionPrompt == true'; do
+            '.permissions.denyInsteadOfPrompting == true' '.permissions.disableBypassPermissionsMode == "disable"' \
+            '.skipDangerousModePermissionPrompt == null'; do
   check "policy: $expr" setting "$expr"
 done
 # Photos and files from Telegram land in the plugin's inbox, outside the workspace: without this the first Read would prompt, and a prompt is denied.

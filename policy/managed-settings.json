@@ -1,9 +1,9 @@
 {
   "channelsEnabled": true,
-  "skipDangerousModePermissionPrompt": true,
   "disableClaudeAiConnectors": true,
   "permissions": {
     "denyInsteadOfPrompting": true,
+    "disableBypassPermissionsMode": "disable",
     "additionalDirectories": ["/data/config/channels/telegram/inbox"],
     "deny": [
       "Read(**/.env)",
