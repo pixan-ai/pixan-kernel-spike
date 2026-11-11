@@ -46,7 +46,7 @@ Evidence labels: **Lab** = observed on a real run; **Docs** = from official docu
 - Two users and simultaneous messages.
 - 24-hour soak test with a non-expiring key and memory growth.
 - Whether adding `/tmp` to `permissions.additionalDirectories` removes the stall prompt.
-- Zombie detection (Claude alive, Telegram channel dead): no verified signal yet. `start.sh` exits when `claude` exits, which covers a crash but not a hang. Before writing a watchdog, find in a real log what a dead channel looks like (plugin process gone, no `getUpdates` activity); a guessed signal could restart a healthy bot.
+- Zombie detection (Claude alive, Telegram channel dead): `watchdog.sh` checks every five minutes that the process in the plugin's `bot.pid` is alive while Claude runs; after two sightings in a row it tells the owner and restarts. The signal comes from the plugin's source; to be confirmed on a live agent before relying on it (a wrong signal would restart a healthy bot every ten minutes). It does not detect a plugin that is alive but no longer receiving.
 - Scheduled jobs are implemented ([docs/CRON.md](CRON.md)); the items under "Not verified yet" there need a lab run.
 - Detecting a second poller on the same bot token (HTTP 409). A `getMe` preflight for revoked tokens exists; 409 only shows up while polling.
 - Attachments: observed on Railway (2026-11-10) that the agent could not read a photo (inbox outside the workspace, read denied). Fixed with `permissions.additionalDirectories`; to be confirmed by sending a photo after the redeploy.

@@ -8,7 +8,7 @@ Jobs survive restarts and redeploys because they are lines in a file on the volu
 |---|---|
 | `config.sh job "M H D M W" NAME "PROMPT"` | How a job is added: by the agent, when the owner asks in chat. Validates the schedule and the name, tells the owner. `config.sh drop NAME` removes it |
 | `/data/cron/jobs`, `/data/cron/prompts/NAME` | The agent's jobs (`SCHEDULE job.sh NAME`) and their prompts, on the volume |
-| `bin/system.cron` | The image's own jobs (the daily recycle at 04:00). Root-owned, replaced by every image update |
+| `bin/system.cron` | The image's own jobs (the daily recycle at 04:00, and `watchdog.sh` every five minutes). Root-owned, replaced by every image update |
 | `/data/cron/crontab` | What Supercronic runs: the image's jobs plus the agent's, rebuilt by `config.sh apply` at every start and after every change. **Only well-formed `job.sh NAME` lines are copied**: anything else written into the files never runs |
 | `job.sh NAME` | Runs the prompt in a separate Claude session (`claude -p`), which only writes the message; the script sends it to the owner in private, or to a group the agent is in if the job was given one (`config.sh job … GROUP_ID`). Failures always go to the owner. It alerts the owner if it fails or exceeds `JOB_TIMEOUT` (default 900 s) |
 | `/data/workspace/sent.jsonl` | One line per delivery (when, job, destination, text; last 500). A `UserPromptSubmit` hook shows the agent its last five deliveries of the last 24 hours, each cut at 400 characters, with every message it receives, so "explain the first item" works. The file is also there for the agent to read |

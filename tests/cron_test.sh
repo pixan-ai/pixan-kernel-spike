@@ -54,7 +54,22 @@ check "...and records nothing as sent" test ! -e /data/workspace/sent.jsonl
 fresh; job CLAUDE_STUB=hang JOB_TIMEOUT=1
 check "a hung job is killed at its timeout and the owner is alerted" sent_to_owner 'Scheduled job "news" failed'
 
-check "the daily recycle's command (pkill) exists" command -v pkill
+# --- watchdog: Claude up, Telegram plugin gone
+printf '#!/usr/bin/env bash\n[ "${CLAUDE_UP:-1}" = 1 ]\n' > "$STUBS/pgrep"; printf '#!/usr/bin/env bash\necho "$*" >> /data/pkill-args\n' > "$STUBS/pkill"; chmod 755 "$STUBS/pgrep" "$STUBS/pkill"
+dog() { env PATH="$STUBS:$BIN:$PATH" "$@" "$BIN/watchdog.sh" > /dev/null 2>&1; }
+quiet() { test ! -e /data/pkill-args -a ! -s /data/curl-args; }
+fresh; : > /data/curl-args; echo $$ > /data/config/channels/telegram/bot.pid; dog; dog
+check "watchdog: plugin alive -> nothing happens" quiet
+echo 999999 > /data/config/channels/telegram/bot.pid; dog
+check "watchdog: plugin gone, first sighting -> wait (it may be starting)" quiet
+echo $$ > /data/config/channels/telegram/bot.pid; dog; echo 999999 > /data/config/channels/telegram/bot.pid; dog
+check "watchdog: a recovery in between resets the count" quiet
+dog
+check "watchdog: gone twice in a row -> the owner is told" sent_to_owner "Telegram channel was down"
+check "...and Claude is restarted" grep -qx -- "-x script" /data/pkill-args
+fresh; : > /data/curl-args; dog CLAUDE_UP=0; dog CLAUDE_UP=0; dog CLAUDE_UP=0
+check "watchdog: Claude not running (starting, asleep) -> it judges nothing" quiet
+check "the daily recycle's command (pkill) exists" test -x /usr/bin/pkill
 if command -v supercronic > /dev/null; then
   check "the image's crontab is valid for supercronic" supercronic -quiet -test "$BIN/system.cron"
 fi
