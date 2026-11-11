@@ -49,12 +49,31 @@ cd "$WS"
 [ ! -f /data/audit.jsonl ] || { tail -n 10000 /data/audit.jsonl > /data/audit.tmp && mv /data/audit.tmp /data/audit.jsonl; }
 [ ! -f "$WS/sent.jsonl" ] || { tail -n 500 "$WS/sent.jsonl" > "$WS/sent.tmp" && mv "$WS/sent.tmp" "$WS/sent.jsonl"; }
 # Scheduled jobs: config.sh apply (above) built /data/cron/crontab from the image's jobs and the agent's. If the last heartbeat is old, say so: jobs due meanwhile did not run.
-[ ! -e /data/cron/alive ] || (( $(date +%s) - $(stat -c %Y /data/cron/alive) < 300 )) || notify.sh "Back online. I was down from $(date -r /data/cron/alive '+%F %H:%M') to $(date '+%H:%M'); jobs scheduled in between did not run." || true
+[ ! -e /data/cron/alive ] || [ -e /data/idle ] || (( $(date +%s) - $(stat -c %Y /data/cron/alive) < 300 )) || notify.sh "Back online. I was down from $(date -r /data/cron/alive '+%F %H:%M') to $(date '+%H:%M'); jobs scheduled in between did not run." || true
 (while touch /data/cron/alive; do sleep 30; done) &
 supercronic -quiet -inotify /data/cron/crontab &
-# A restart continues the last conversation. If claude then dies within a minute, the next start opens a fresh one instead of looping on a session it cannot load.
-C=; ls "$CFG"/projects/*/*.jsonl > /dev/null 2>&1 && [ ! -e /data/fresh ] && C=--continue; rm -f /data/fresh
-tail -f /dev/null | script -qfc "stty cols 120 rows 40; exec claude $C --channels plugin:telegram@claude-plugins-official ${CLAUDE_FLAGS:-}" /data/tui.log > /dev/null || true  # tail dies of SIGPIPE when claude exits; still report it below
-[ -z "$C" ] || (( SECONDS > 60 )) || touch /data/fresh
-(( SECONDS > 60 )) || sleep 60  # crash-loop brake: do not hammer the APIs with restarts
+# LAB (opt-in, IDLE_SLEEP_MINUTES): sleep when nobody talks, wake on a Telegram webhook. While asleep nothing here sends a packet,
+# so a host that suspends idle containers (Railway Serverless) stops billing memory. See docs/DOORBELL-LAB.md.
+# shellcheck source=/dev/null
+tg() { (. "$TG/.env"; printf 'url = "https://api.telegram.org/bot%s/%s"\n' "$TELEGRAM_BOT_TOKEN" "$1" | curl -sS -m 15 -K - "${@:2}" -o /dev/null) || true; }
+stamp() { echo "$(date '+%F %T.%3N') $*" >&2; }
+while :; do
+  T0=$SECONDS; rm -f /data/idle
+  if [ -n "${IDLE_SLEEP_MINUTES:-}" ]; then
+    tg deleteWebhook  # pending messages stay queued at Telegram; the plugin collects them by polling
+    (while sleep 30; do f=$(find "$CFG/projects" -name '*.jsonl' -newermt "-${IDLE_SLEEP_MINUTES} minutes" 2> /dev/null | head -1)
+       [ -n "$f" ] || (( SECONDS - T0 < IDLE_SLEEP_MINUTES * 60 )) || { touch /data/idle; pkill -x script; break; }; done) &
+  fi
+  # A restart continues the last conversation. If claude then dies within a minute, the next start opens a fresh one instead of looping on a session it cannot load.
+  C=; ls "$CFG"/projects/*/*.jsonl > /dev/null 2>&1 && [ ! -e /data/fresh ] && C=--continue; rm -f /data/fresh
+  stamp "claude starting ${C:-fresh}"
+  tail -f /dev/null | script -qfc "stty cols 120 rows 40; exec claude $C --channels plugin:telegram@claude-plugins-official ${CLAUDE_FLAGS:-}" /data/tui.log > /dev/null || true  # tail dies of SIGPIPE when claude exits; still report it below
+  [ -e /data/idle ] || break
+  tg setWebhook --data-urlencode "url=https://${RAILWAY_PUBLIC_DOMAIN}/doorbell" -d 'allowed_updates=["message"]'
+  stamp "idle: claude stopped, webhook set, waiting for the doorbell"
+  # The doorbell: answer 503 so Telegram keeps the message, say how long ago it was sent, and exit.
+  bun -e 'Bun.serve({port: Number(process.env.PORT || 8080), async fetch(r) { let age = "?"; try { const u = await r.json(); age = (Date.now() / 1000 - u.message.date).toFixed(1) } catch {} console.error(new Date().toISOString() + " doorbell rang; message sent " + age + " s ago"); setTimeout(() => process.exit(0), 100); return new Response("waking", {status: 503}) }})' || true
+done
+[ -z "$C" ] || (( SECONDS - T0 > 60 )) || touch /data/fresh
+(( SECONDS - T0 > 60 )) || sleep 60  # crash-loop brake: do not hammer the APIs with restarts
 echo "claude exited" >&2; exit 1
