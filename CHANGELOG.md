@@ -4,10 +4,6 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 
 ## [Unreleased]
 
-### Added
-
-- **Daily dream** (`bin/dream.sh`, `docs/MEMORY.md`): once a day what was said is consolidated into `/data/workspace/MEMORY.md` and the next conversation starts clean, so a session no longer grows for ever. The memory is shown to the agent at every session start. A failed dream leaves the conversation as it was. `docs/MEMORY.md` also describes the daily council: every agent of a team reporting in one Telegram group.
-
 ### Changed
 
 - **Groups are open.** In a group the agent was told to join it now reads and can answer every member, people and bots, instead of only the owner and listed ids. `TELEGRAM_GROUP_SENDERS` and `config.sh sender` are removed. The agent is told its owner's id at every session start and that only the owner gives instructions; in groups that is an instruction, not a lock (see `docs/GROUPS.md`). Super-users (`config.sh admin ID`) may also give instructions in the groups; the owner or any super-user names them, on this agent or on a fellow agent.
@@ -35,6 +31,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 
 ### Added
 
+- **Daily dream** (`bin/dream.sh`, `docs/MEMORY.md`): once a day what was said is consolidated into `/data/workspace/MEMORY.md` and the next conversation starts clean, so a session no longer grows for ever. The memory is shown to the agent at every session start. A failed dream leaves the conversation as it was. `docs/MEMORY.md` also describes the daily council: every agent of a team reporting in one Telegram group.
 - Opt-in sleep (`IDLE_SLEEP_MINUTES`): Claude stops after a quiet period and a Telegram webhook wakes the agent; the official plugin still receives the message by polling. On Railway with Serverless an idle agent used no memory, and answered 2 to 3 s after a message. See docs/SLEEP.md.
 - Unanswered-message alert: a message whose turn has not ended after ten minutes is reported to the owner, once.
 - docs/GETTING-STARTED.md: installation for a first-time user, and what to tell the agent afterwards.
