@@ -8,7 +8,9 @@ By default the bot only listens to its owner in private. To use it in a group, t
 - **Privacy mode.** By default a bot in a group only receives commands, mentions and replies to its own messages; plain messages never reach it. To let it read everything: BotFather `/setprivacy` → Disable, then **remove the bot from the group and add it again** (the change does not apply to groups it is already in). Making the bot an admin of the group has the same effect.
 - **Bots reading other bots.** Needs Telegram's Bot-to-Bot mode enabled in BotFather for the bots involved, and each bot's id listed in the other's `TELEGRAM_GROUP_SENDERS`.
 
-## 2. Deployment side (variables)
+## 2. Agent side
+
+Tell the agent in private: "join the group -1001234567890" and, for bots to hear each other, "also listen to 123456789". It applies the change itself and confirms ([SETTINGS.md](SETTINGS.md)). The variables below do the same from the host:
 
 | Variable | Meaning |
 |---|---|

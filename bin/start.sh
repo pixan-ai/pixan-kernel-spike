@@ -18,11 +18,14 @@ cp -rn /opt/seed/config/. "$CFG"/
 # The plugin must run from the volume copy (the one the policy protects), and a new image must replace it:
 # its registry files carry the absolute build path, so copy it fresh at every start and point them at the volume.
 rm -rf "$CFG/plugins" && cp -r /opt/seed/config/plugins "$CFG/" && sed -i "s#/opt/seed/config#$CFG#g" "$CFG"/plugins/*.json
-# Who may talk to the bot, rebuilt from the variables at every start: the owner in private; in the listed groups, the owner and the listed senders, without having to mention the bot.
-jq -n --arg o "$OWNER_TELEGRAM_ID" --arg g "${TELEGRAM_GROUP_IDS:-}" --arg s "${TELEGRAM_GROUP_SENDERS:-}" '($g | split(" ") | map(select(. != ""))) as $gs | ([$o] + ($s | split(" ") | map(select(. != "")))) as $who
-  | {dmPolicy: "allowlist", allowFrom: ([$o] + $gs), groups: ($gs | map({key: ., value: {requireMention: false, allowFrom: $who}}) | from_entries), pending: {}}' > "$TG/access.json"
+# Who may talk to the bot: the owner in private, plus the groups and senders in /data/settings. That file is seeded
+# from the variables and then kept by the agent itself (config.sh), so the owner never has to come back to the host.
+# shellcheck disable=SC2086  # word splitting on purpose: one line per id
+{ cat /data/settings 2> /dev/null || true; printf 'group %s\n' ${TELEGRAM_GROUP_IDS:-}; printf 'sender %s\n' ${TELEGRAM_GROUP_SENDERS:-}; } | grep ' .' | sort -u > /data/settings.tmp || true
+mv /data/settings.tmp /data/settings
 # The plugin and the alert hook read the bot credentials from this file (ready for an env scrub on hosts that allow it).
 (umask 077; printf 'TELEGRAM_BOT_TOKEN=%s\nOWNER_TELEGRAM_ID=%s\n' "$TELEGRAM_BOT_TOKEN" "$OWNER_TELEGRAM_ID" > "$TG/.env")
+config.sh apply
 # A revoked or mistyped bot token would leave the bot mute with no error anywhere: ask Telegram once. Only a clear 401 stops the start; a network hiccup does not. The URL goes through stdin so the token is not in a process list.
 code=$(printf 'url = "https://api.telegram.org/bot%s/getMe"\n' "$TELEGRAM_BOT_TOKEN" | curl -sS -K - -o /dev/null -w '%{http_code}' -m 10 2>/dev/null || true)
 [ "$code" != 401 ] || { echo "Telegram rejected TELEGRAM_BOT_TOKEN (HTTP 401): create a new one with BotFather" >&2; exit 1; }

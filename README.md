@@ -87,7 +87,8 @@ compose.yml                   local run, one volume at /data
 bin/start.sh                  entrypoint: seed config, allowlist, pre-accept, run claude in a pty
 bin/screen.sh                 readable view of the Claude screen log
 bin/job.sh                    runs one scheduled prompt and delivers the answer (see docs/CRON.md)
-bin/peer.sh                   read-only view for fellow agents over SSH (see docs/PEERS.md)
+bin/config.sh                 settings the agent changes itself when the owner asks (see docs/SETTINGS.md)
+bin/peer.sh                   what fellow agents may do over SSH: look, and set groups (see docs/PEERS.md)
 bin/notify.sh                 one Telegram message to the owner
 bin/denials.sh                loaded policy + tool errors from the latest session
 policy/managed-settings.json  the managed policy and hooks

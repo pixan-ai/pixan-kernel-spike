@@ -48,7 +48,7 @@ jobs:
           cache-to: type=gha,mode=max
       - name: Acceptance tests (inside the built image)
         run: |
-          for t in start tools policy cron peer; do
+          for t in start tools policy cron peer config; do
             docker run --rm --user 0 --entrypoint bash -v "$PWD/tests:/tests:ro" pixan-kernel-spike:ci "/tests/${t}_test.sh" || exit 1
           done
       # Report-only until the baseline is known: set exit-code: "1" to make fixable HIGH/CRITICAL findings block.
