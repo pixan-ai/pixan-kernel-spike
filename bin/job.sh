@@ -10,8 +10,8 @@ to=$(cat "/data/cron/prompts/$name.to" 2> /dev/null || true)  # a group to deliv
 if out=$(timeout "${JOB_TIMEOUT:-900}" claude -p --permission-mode auto "$*
 
 Write only the text of the message. It is delivered to Telegram for you: do not look for a tool to send it." 2> "/data/cron/$name.err") && [ -n "$out" ]; then
-  # The bot's own session never saw this message: keep a copy where its instructions tell it to look (last 300 lines).
-  printf '\n## %s · %s\n%s\n' "$(date '+%F %H:%M')" "$name" "$out" >> sent.md && tail -n 300 sent.md > sent.md.tmp && mv sent.md.tmp sent.md
+  # The bot's own session never saw this message: record it. A hook shows the bot its recent deliveries with every message it receives.
+  jq -cn --arg n "$name" --arg to "$to" --arg t "$out" '{at: (now | floor), name: $n, to: $to, text: $t}' >> sent.jsonl
   notify.sh "$out" "$to"
 else
   notify.sh "⚠️ Scheduled job \"$name\" failed or timed out. $(tail -c 300 "/data/cron/$name.err")"; exit 1

@@ -40,6 +40,17 @@
     ]
   },
   "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -rs --argjson now \"$(date +%s)\" '[.[] | select(.at > $now - 86400)] | .[-5:] | if length > 0 then \"For context: you already sent these through scheduled jobs in the last 24 hours. Do not resend them; the owner may be referring to one.\\n\" + (map(\"- \\(.at | strflocaltime(\"%H:%M\")) [\\(.name)] \\(.text[0:400])\") | join(\"\\n\")) else empty end' /data/workspace/sent.jsonl 2>/dev/null || true",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
     "SessionStart": [
       {
         "hooks": [

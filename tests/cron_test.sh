@@ -31,14 +31,13 @@ token_only_on_stdin() { grep -q "bot123:SECRET/sendMessage" /data/curl-stdin && 
 fresh; job
 check "a job's answer is sent to the owner" sent_to_owner "five AI headlines"
 check "...with the bot token on stdin, never on the command line" token_only_on_stdin
-check "...and kept where the bot can find it later (sent.md)" grep -q "five AI headlines" /data/workspace/sent.md
-check "...under the job's name" grep -q "news" /data/workspace/sent.md
+check "...and recorded for the bot: when, which job, what it said" test "$(jq -c '[.name, .text, (.at > 1700000000)]' /data/workspace/sent.jsonl)" = '["news","five AI headlines",true]'
 check "a job runs in its own config directory, never the bot's" test "$(cat /data/claude-config-dir)" = /data/cron/config
 
 fresh; mkdir -p /data/cron/prompts; echo "PROMPT-FROM-FILE" > /data/cron/prompts/news
 env PATH="$STUBS:$BIN:$PATH" CLAUDE_STUB=echo "$BIN/job.sh" news > /dev/null 2>&1
-check "a job without a prompt on its line takes it from its file" grep -q "PROMPT-FROM-FILE" /data/workspace/sent.md
-check "what a job writes on stderr never reaches the owner" bash -c '! grep -q "noise on stderr" /data/curl-args /data/workspace/sent.md'
+check "a job without a prompt on its line takes it from its file" grep -q "PROMPT-FROM-FILE" /data/workspace/sent.jsonl
+check "what a job writes on stderr never reaches the owner" bash -c '! grep -q "noise on stderr" /data/curl-args /data/workspace/sent.jsonl'
 
 fresh; mkdir -p /data/cron/prompts; printf '%s' "-1001" > /data/cron/prompts/news.to; job
 check "a job with a group as its destination delivers there" grep -q "chat_id=-1001" /data/curl-args
@@ -50,7 +49,7 @@ check "...with the error, which never travels with a normal answer" grep -q "boo
 fresh; job CLAUDE_STUB=fail
 check "a failing job alerts the owner" sent_to_owner 'Scheduled job "news" failed'
 check "...exits non-zero" test "$RC" != 0
-check "...and records nothing as sent" test ! -e /data/workspace/sent.md
+check "...and records nothing as sent" test ! -e /data/workspace/sent.jsonl
 
 fresh; job CLAUDE_STUB=hang JOB_TIMEOUT=1
 check "a hung job is killed at its timeout and the owner is alerted" sent_to_owner 'Scheduled job "news" failed'
