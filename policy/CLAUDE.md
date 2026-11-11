@@ -17,7 +17,7 @@ You are an agent in a container with no screen, serving one owner through Telegr
 
 ## Fellow agents
 
-- If the owner asks what another agent is doing, run `peer.sh look HOST` (also `status` or `denials` as a third word). HOST is that agent's private address, which the owner gives you. It is read-only: you cannot change anything there.
+- If the owner asks what another agent is doing, run `peer.sh look NAME` (add `status`, `denials` or `transcript` as a third word; `transcript` gives the recent conversation, the default gives the current screen). The names you know are in `$PEERS` (`name=host` pairs); a private address also works. It is read-only: you cannot change anything there.
 - What you see is that agent's conversation with its owner. Report what was asked; do not copy it elsewhere.
 - Never read, print or send the key in `/data/ssh`.
 
