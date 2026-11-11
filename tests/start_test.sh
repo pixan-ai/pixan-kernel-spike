@@ -100,6 +100,13 @@ run CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-x PEER_PUBLIC_KEYS="ssh-ed25519 AAAA fr
 check "PEER_PUBLIC_KEYS starts the peer view" grep -qx serve /data/peer-args
 check "PEER_SSH_KEY is stored for looking at others, private (600)" test "$(stat -c %a /data/ssh/peer_key)$(cat /data/ssh/peer_key)" = "600PRIVATE-KEY-BODY"
 
+check "no groups unless listed" test "$(jq -c .groups /data/config/channels/telegram/access.json)" = '{}'
+run CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-x TELEGRAM_GROUP_IDS="-1001 -1002" TELEGRAM_GROUP_SENDERS="777"
+group() { jq -c "$1" /data/config/channels/telegram/access.json; }
+check "listed groups are open to the bot, without a mention" test "$(group '[.groups | keys[], (.[] | .requireMention)]')" = '["-1001","-1002",false,false]'
+check "...only for the owner and the listed senders, not for every member" test "$(group '.groups["-1001"].allowFrom')" = '["42","777"]'
+check "...and private messages stay owner-only" test "$(group '.allowFrom - ["-1001","-1002"]')" = '["42"]'
+
 run ANTHROPIC_API_KEY=dummy-api-key-0123456789ABCDEFGHIJ
 check "API key switch: its last 20 chars are pre-approved" test "$(jq -c '.customApiKeyResponses.approved' /data/config/.claude.json)" = '["0123456789ABCDEFGHIJ"]'
 

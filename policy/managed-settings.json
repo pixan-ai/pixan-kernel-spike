@@ -11,6 +11,7 @@
       "Read(//data/config/.credentials.json)",
       "Read(//data/ssh/**)",
       "Edit(//data/ssh/**)",
+      "Edit(//data/settings)",
       "Edit(//data/config/settings.json)",
       "Edit(//data/config/.claude.json)",
       "Edit(//data/config/.credentials.json)",
