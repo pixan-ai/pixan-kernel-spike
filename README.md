@@ -18,6 +18,8 @@ Telegram ──► official plugin (MCP channel) ──► claude (interactive, 
 - The container restart policy is the watchdog: if `claude` exits, the container exits and restarts.
 - Behavior is controlled with `.md` files (`CLAUDE.md`) and one managed settings file.
 
+New here? Follow [docs/GETTING-STARTED.md](docs/GETTING-STARTED.md): from nothing to an agent that answers, step by step.
+
 ## Quick start (Docker)
 
 1. Create a bot with [@BotFather](https://t.me/BotFather) and get your numeric Telegram user id.
