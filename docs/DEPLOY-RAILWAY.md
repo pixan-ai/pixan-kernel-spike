@@ -2,7 +2,7 @@
 
 Status: verified end to end on Railway (November 2026) with a Claude Max subscription token.
 
-1. Create a project and a service from this repository. In the service's **Settings**: set **Dockerfile Path** to `Dockerfile` (this selects the Dockerfile builder) and **Restart Policy** to **Always**. Optional **Watch Paths**: `Dockerfile`, `bin/**`, `policy/**`, `seed/**`, so documentation and CI changes do not restart the agent.
+1. Create a project and a service from this repository. In the service's **Settings**: set **Dockerfile Path** to `Dockerfile` (this selects the Dockerfile builder) and **Restart Policy** to **Always**. Optional **Watch Paths**: `Dockerfile`, `bin/**`, `policy/**`, so documentation and CI changes do not restart the agent.
 2. Add a **volume** mounted at `/data` (one volume per service).
 3. Set variables in the Railway dashboard (never in the repository):
    - `CLAUDE_CODE_OAUTH_TOKEN` (subscription, from `claude setup-token`) **or** `ANTHROPIC_API_KEY` (Console, per use). Not both: the API key wins.

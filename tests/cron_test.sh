@@ -11,7 +11,7 @@ cat > "$STUBS/claude" <<'EOF'
 #!/usr/bin/env bash
 # Stub Claude: record where it keeps its config, then behave as CLAUDE_STUB says.
 echo "$CLAUDE_CONFIG_DIR" > /data/claude-config-dir
-case "${CLAUDE_STUB:-ok}" in ok) echo "five AI headlines";; fail) echo "boom" >&2; exit 1;; hang) sleep 30;; esac
+case "${CLAUDE_STUB:-ok}" in ok) echo "five AI headlines";; echo) echo "${@: -1}";; fail) echo "boom" >&2; exit 1;; hang) sleep 30;; esac
 EOF
 cat > "$STUBS/curl" <<'EOF'
 #!/usr/bin/env bash
@@ -35,6 +35,10 @@ check "...and kept where the bot can find it later (sent.md)" grep -q "five AI h
 check "...under the job's name" grep -q "news" /data/workspace/sent.md
 check "a job runs in its own config directory, never the bot's" test "$(cat /data/claude-config-dir)" = /data/cron/config
 
+fresh; mkdir -p /data/cron/prompts; echo "PROMPT-FROM-FILE" > /data/cron/prompts/news
+env PATH="$STUBS:$BIN:$PATH" CLAUDE_STUB=echo "$BIN/job.sh" news > /dev/null 2>&1
+check "a job without a prompt on its line takes it from its file" grep -q "PROMPT-FROM-FILE" /data/workspace/sent.md
+
 fresh; job CLAUDE_STUB=fail
 check "a failing job alerts the owner" sent_to_owner 'Scheduled job "news" failed'
 check "...exits non-zero" test "$RC" != 0
@@ -45,7 +49,7 @@ check "a hung job is killed at its timeout and the owner is alerted" sent_to_own
 
 check "the daily recycle's command (pkill) exists" command -v pkill
 if command -v supercronic > /dev/null; then
-  check "the seeded crontab is valid for supercronic" supercronic -quiet -test "${CRONTAB:-/opt/seed/crontab}"
+  check "the image's crontab is valid for supercronic" supercronic -quiet -test "$BIN/system.cron"
 fi
 rm -rf "$STUBS"
 echo "$FAILS failed"; exit $((FAILS > 0))
