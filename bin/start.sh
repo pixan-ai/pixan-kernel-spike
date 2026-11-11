@@ -26,8 +26,8 @@ mv /data/settings.tmp /data/settings
 # The plugin and the alert hook read the bot credentials from this file (ready for an env scrub on hosts that allow it).
 (umask 077; printf 'TELEGRAM_BOT_TOKEN=%s\nOWNER_TELEGRAM_ID=%s\n' "$TELEGRAM_BOT_TOKEN" "$OWNER_TELEGRAM_ID" > "$TG/.env")
 config.sh apply
-# A revoked or mistyped bot token would leave the bot mute with no error anywhere: ask Telegram once. Only a clear 401 stops the start; a network hiccup does not. The URL goes through stdin so the token is not in a process list.
-code=$(printf 'url = "https://api.telegram.org/bot%s/getMe"\n' "$TELEGRAM_BOT_TOKEN" | curl -sS -K - -o /dev/null -w '%{http_code}' -m 10 2>/dev/null || true)
+# A revoked or mistyped bot token would leave the bot mute with no error anywhere: ask Telegram once (the answer also tells the agent its own bot name, see the SessionStart hook). Only a clear 401 stops the start; a network hiccup does not. The URL goes through stdin so the token is not in a process list.
+code=$(printf 'url = "https://api.telegram.org/bot%s/getMe"\n' "$TELEGRAM_BOT_TOKEN" | curl -sS -K - -o "$TG/me.json" -w '%{http_code}' -m 10 2>/dev/null || true)
 [ "$code" != 401 ] || { echo "Telegram rejected TELEGRAM_BOT_TOKEN (HTTP 401): create a new one with BotFather" >&2; exit 1; }
 # Nobody is at the screen: pre-accept onboarding, the API key (if one is used) and trust for the workspace folder.
 # Auth: ANTHROPIC_API_KEY (Console, billed per use) or CLAUDE_CODE_OAUTH_TOKEN (subscription, from `claude setup-token`).
