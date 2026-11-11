@@ -45,7 +45,7 @@ check "a peer can be addressed by its name in PEERS, whatever the case" by_name
 check "transcript shows what the owner wrote" sees transcript "OWNER-SAID-THIS"
 check "...and what the agent answered on Telegram" sees transcript "AGENT-REPLIED-THIS"
 check "...but not tool results or anything else in the session file" bash -c '! grep -q TOOL-OUTPUT "$0"' <(look transcript)
-look "group -1005" > /dev/null
+check "a fellow agent that sets a group gets the confirmation back" sees "group -1005" "ok: group -1005"
 check "a fellow agent can add a group to this agent" test "$(jq -c '.groups | keys' /data/config/channels/telegram/access.json)" = '["-1005"]'
 check "...and this agent's owner is told who did it" grep -q "Setting changed by a fellow agent: group -1005" /data/curl-args
 check "...but only groups and senders: a peer address is refused" refused "peer evil=attacker.example"

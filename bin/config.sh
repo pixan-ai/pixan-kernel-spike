@@ -21,4 +21,5 @@ esac
 jq -n --arg o "$OWNER_TELEGRAM_ID" --rawfile f $F '($f | split("\n") | map(split(" "))) as $l
   | ($l | map(select(.[0] == "group") | .[1])) as $gs | ([$o] + ($l | map(select(.[0] == "sender") | .[1]))) as $who
   | {dmPolicy: "allowlist", allowFrom: ([$o] + $gs), groups: ($gs | map({key: ., value: {requireMention: false, allowFrom: $who}}) | from_entries), pending: {}}' > $TG/access.json
+[ "$1" = apply ] || echo "ok: $1 $2. Groups: $(jq -c '.groups | keys' $TG/access.json), heard there: $(jq -c '[.groups[].allowFrom[]] | unique' $TG/access.json)"
 [ "$1" = apply ] || "$(dirname "$(readlink -f "$0")")/notify.sh" "⚙️ Setting changed${SSH_CONNECTION:+ by a fellow agent}: $1 $2. To undo it, ask me to drop $2." || echo "could not notify the owner" >&2

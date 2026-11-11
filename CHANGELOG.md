@@ -6,6 +6,8 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 
 ### Changed
 
+- Group instructions: a message from the owner to the group in general is answered (seen on Railway: both agents stayed silent on a plain "Hola").
+- `config.sh` answers with a confirmation and the resulting groups and senders, so an agent that changes a fellow agent's settings can verify it (seen on Railway: the change worked but returned nothing).
 - `access.json` is rebuilt from the variables at every start (it was written only once): changing the owner or the groups is a variable change and a redeploy.
 - A restart continues the last conversation (`--continue`). If Claude dies within a minute while continuing, the next start opens a fresh session. A 60-second brake slows crash loops.
 - Fix: the Telegram plugin ran from the image's build path (its registry files hold absolute paths), outside the policy's protection, and a newer image could not replace the copy on the volume. Every start now copies the plugin to the volume and points its registry there.

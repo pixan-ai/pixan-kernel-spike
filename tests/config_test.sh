@@ -22,7 +22,7 @@ config group -1001
 check "group ID: the bot takes part in that group, without a mention" test "$(access '.groups["-1001"].requireMention')" = false
 check "...listening only to the owner there" test "$(access '.groups["-1001"].allowFrom')" = '["42"]'
 check "...and the owner is told, in private" told "Setting changed: group -1001"
-config sender 777
+check "...and whoever asked gets a confirmation with the resulting state" bash -c 'env PATH="$0:$PATH" "$1/config.sh" sender 777 | grep -q "ok: sender 777. Groups: \[\"-1001\"\], heard there: \[\"42\",\"777\"\]"' "$STUBS" "$BIN"
 check "sender ID: that user or bot is heard in the groups" test "$(access '.groups["-1001"].allowFrom')" = '["42","777"]'
 check "...but not in private" test "$(access '.allowFrom - ["-1001"]')" = '["42"]'
 config group -1001

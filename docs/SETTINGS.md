@@ -30,4 +30,4 @@ The owner, the Claude and Telegram credentials and the peer keys. `config.sh` ac
 ## Verified
 
 - In CI (`tests/config_test.sh`, `tests/peer_test.sh`): each setting, the notice, refusal of anything else, and a change made by a fellow agent over a real SSH connection.
-- Not verified yet on Railway.
+- On Railway (2026-11-10): one agent added a group to the other over the private network; the other's owner received the notice "by a fellow agent".
