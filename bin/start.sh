@@ -14,6 +14,9 @@ fi
 # Then log a sanity check without printing any part of it.
 T="${CLAUDE_CODE_OAUTH_TOKEN:-}"; T="${T//[[:space:]]/}"; [ -z "$T" ] || export CLAUDE_CODE_OAUTH_TOKEN="$T"; [ -z "$T" ] || echo "oauth token: ${#T} chars, starts with sk-ant-oat01-: $([[ "$T" == sk-ant-oat01-* ]] && echo yes || echo NO)" >&2
 CFG=/data/config; TG=$CFG/channels/telegram; WS=/data/workspace
+# Backups (docs/BACKUP.md): the storage credentials go to a private file. An empty volume with BACKUP_AGE_KEY set is restored from the newest backup.
+(umask 077; mkdir -p /data/ssh; [ -z "${RCLONE_CONF:-}" ] || printf '%s\n' "$RCLONE_CONF" > /data/ssh/rclone.conf)
+[ -e "$CFG/.claude.json" ] || [ -z "${BACKUP_AGE_KEY:-}" ] || backup.sh restore || echo "restore failed: starting with an empty volume" >&2
 mkdir -p "$WS" "$TG/inbox"
 cp -rn /opt/seed/config/. "$CFG"/
 # The plugin must run from the volume copy (the one the policy protects), and a new image must replace it:
@@ -30,7 +33,7 @@ config.sh apply
 # A revoked or mistyped bot token would leave the bot mute with no error anywhere: ask Telegram once (the answer also tells the agent its own bot name, see the SessionStart hook). Only a clear 401 stops the start; a network hiccup does not. The URL goes through stdin so the token is not in a process list.
 code=$(printf 'url = "https://api.telegram.org/bot%s/getMe"\n' "$TELEGRAM_BOT_TOKEN" | curl -sS -K - -o "$TG/me.json" -w '%{http_code}' -m 10 2>/dev/null || true)
 [ "$code" != 401 ] || { echo "Telegram rejected TELEGRAM_BOT_TOKEN (HTTP 401): create a new one with BotFather" >&2; exit 1; }
-unset TELEGRAM_BOT_TOKEN  # from here on only the private file holds it (the plugin, the hooks and the scripts read that)
+unset TELEGRAM_BOT_TOKEN RCLONE_CONF BACKUP_AGE_KEY  # from here on only private files hold them (the plugin, the hooks and the scripts read those)
 # Nobody is at the screen: pre-accept onboarding, the API key (if one is used) and trust for the workspace folder.
 # Auth: ANTHROPIC_API_KEY (Console, billed per use) or CLAUDE_CODE_OAUTH_TOKEN (subscription, from `claude setup-token`).
 [ -s "$CFG/.claude.json" ] || echo '{}' > "$CFG/.claude.json"

@@ -13,7 +13,7 @@ chmod 755 "$STUBS"; chmod 644 "$OUT" "$ERR"
 cat > "$STUBS/script" <<'EOF'
 #!/usr/bin/env bash
 # Stub pty: record who would run claude, with which credentials and command, then "exit" like claude dying.
-{ echo "uid=$(id -u)"; echo "oauth=${CLAUDE_CODE_OAUTH_TOKEN:-}"; echo "bottoken=${TELEGRAM_BOT_TOKEN:-}"; echo "cmd=$2"; } > /data/probe
+{ echo "uid=$(id -u)"; echo "oauth=${CLAUDE_CODE_OAUTH_TOKEN:-}"; echo "bottoken=${TELEGRAM_BOT_TOKEN:-}"; echo "backupsecrets=${RCLONE_CONF:-}${BACKUP_AGE_KEY:-}"; echo "cmd=$2"; } > /data/probe
 echo "owner said: SCREEN-MARKER" > /data/tui.log; sleep 3  # long enough for a 1 s mirror to fire
 EOF
 chmod 755 "$STUBS/script"
@@ -34,6 +34,7 @@ printf '%s' "${TG_STATUS:-200}"; [ "${TG_STATUS:-200}" != 000 ] || exit 7
 EOF
 printf '#!/usr/bin/env bash\necho "$*" > /data/supercronic-args\n' > "$STUBS/supercronic"; chmod 755 "$STUBS/supercronic"
 printf '#!/usr/bin/env bash\necho "$*" > /data/peer-args\n' > "$STUBS/peer.sh"; chmod 755 "$STUBS/peer.sh"
+printf '#!/usr/bin/env bash\necho "$*" >> /data/backup-args\n' > "$STUBS/backup.sh"; chmod 755 "$STUBS/backup.sh"
 chmod 755 "$STUBS/curl"
 
 base_env=(PATH="$STUBS:$PATH" TELEGRAM_BOT_TOKEN=123:abc OWNER_TELEGRAM_ID=42)
@@ -117,6 +118,14 @@ check "...and the record of job deliveries to its last 500" test "$(wc -l < /dat
 
 token_gone() { grep -qx "bottoken=" /data/probe; }
 check "the bot token is no longer in the environment when Claude starts" token_gone
+
+check "no restore unless the owner provides the key" test ! -e /data/backup-args
+run CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-x RCLONE_CONF="[gdrive]" BACKUP_AGE_KEY=AGE-SECRET-KEY-1X
+check "an empty volume with BACKUP_AGE_KEY is restored before anything else" grep -qx restore /data/backup-args
+check "the storage credentials are kept in a private file (600)" test "$(stat -c %a /data/ssh/rclone.conf)$(cat /data/ssh/rclone.conf)" = "600[gdrive]"
+check "...and neither they nor the restore key stay in the environment of Claude" grep -qx "backupsecrets=" /data/probe
+rm -f /data/backup-args; again
+check "a volume that already has data is never restored over" test ! -e /data/backup-args
 
 run ANTHROPIC_API_KEY=dummy-api-key-0123456789ABCDEFGHIJ
 check "API key switch: its last 20 chars are pre-approved" test "$(jq -c '.customApiKeyResponses.approved' /data/config/.claude.json)" = '["0123456789ABCDEFGHIJ"]'
