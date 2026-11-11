@@ -38,7 +38,7 @@ chmod 755 "$STUBS/curl"
 
 base_env=(PATH="$STUBS:$PATH" TELEGRAM_BOT_TOKEN=123:abc OWNER_TELEGRAM_ID=42)
 run() {  # run the entrypoint on a fresh, root-owned /data with the given extra env vars
-  pkill -u 1001 2>/dev/null; mkdir -p /data /opt/seed/config; [ -e /opt/seed/crontab ] || echo "# seed" > /opt/seed/crontab; [ -e /opt/seed/config/plugins/installed_plugins.json ] || { mkdir -p /opt/seed/config/plugins; echo '{"installPath":"/opt/seed/config/plugins/cache/x"}' > /opt/seed/config/plugins/installed_plugins.json; }; find /data -mindepth 1 -delete; chown 0:0 /data
+  pkill -u 1001 2>/dev/null; mkdir -p /data /opt/seed/config; [ -e /opt/seed/config/plugins/installed_plugins.json ] || { mkdir -p /opt/seed/config/plugins; echo '{"installPath":"/opt/seed/config/plugins/cache/x"}' > /opt/seed/config/plugins/installed_plugins.json; }; find /data -mindepth 1 -delete; chown 0:0 /data
   env -i "${base_env[@]}" "$@" timeout 20 "$START" >"$OUT" 2>"$ERR"; RC=$?
   pkill -u 1001 2>/dev/null; return 0
 }
@@ -88,10 +88,11 @@ again
 check "...only once: then it continues again" continues
 
 run CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-x
-check "scheduled jobs: the crontab is seeded on the volume" test -s /data/cron/crontab
+check "scheduled jobs: the image's jobs (daily recycle) are in what supercronic runs" grep -q "pkill -x script" /data/cron/crontab
 check "...and supercronic runs that file" grep -q "/data/cron/crontab" /data/supercronic-args
-echo "# the owner's job" > /data/cron/crontab; again
-check "...a restart keeps the owner's crontab" grep -q "the owner's job" /data/cron/crontab
+echo "* * * * * touch /data/escaped" > /data/cron/crontab; echo "0 8 * * * job.sh news" > /data/cron/jobs; again
+check "...a restart rebuilds it: a hand-written line is gone, the image's jobs are back" bash -c '! grep -q escaped /data/cron/crontab && grep -q "pkill -x script" /data/cron/crontab'
+check "...and the agent's own jobs are kept" grep -qx "0 8 \* \* \* job.sh news" /data/cron/crontab
 check "a quick restart is not reported as downtime" bash -c '! grep -q "Back online" /data/curl-calls'
 touch -d "2 hours ago" /data/cron/alive; again
 check "a start after real downtime tells the owner jobs may have been missed" grep -q "Back online" /data/curl-calls

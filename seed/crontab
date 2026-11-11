@@ -1,5 +1,0 @@
-# Scheduled jobs. Standard cron syntax, times in the container's TZ. Edits apply at once; this file lives on the volume.
-# A job is a prompt, run in its own Claude session; the answer is sent to the owner and kept in /data/workspace/sent.md:
-#   0 8 * * *  job.sh news "Summarise today's AI news in five bullets"
-# Daily recycle in a quiet hour: the container restarts and Claude continues the conversation.
-0 4 * * * pkill -x script

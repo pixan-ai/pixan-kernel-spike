@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Runs one scheduled prompt and delivers the answer to the owner. Usage (in the crontab): job.sh NAME "PROMPT"
+# Runs one scheduled prompt and delivers the answer to the owner. Usage: job.sh NAME (the prompt is in /data/cron/prompts/NAME; see config.sh job)
 set -uo pipefail
-name=$1; shift
+name=$1; shift; [ $# -gt 0 ] || set -- "$(cat "/data/cron/prompts/$name")"
 # Its own config directory: a second Claude on the bot's directory would start a second Telegram plugin, which kills the first.
 export CLAUDE_CONFIG_DIR=/data/cron/config
 cd /data/workspace || exit 1

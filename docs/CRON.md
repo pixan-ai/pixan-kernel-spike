@@ -6,19 +6,14 @@ Jobs survive restarts and redeploys because they are lines in a file on the volu
 
 | Piece | What it is |
 |---|---|
-| `/data/cron/crontab` | The schedule. Standard cron syntax, times in the container's `TZ`. Seeded once from `seed/crontab`; then it is the owner's. Edits apply at once |
-| `supercronic` | Runs the lines when they are due. Started by `start.sh` |
-| `job.sh NAME "PROMPT"` | Runs the prompt in a separate Claude session (`claude -p`), sends the answer to the owner on Telegram, alerts the owner if it fails or exceeds `JOB_TIMEOUT` (default 900 s) |
-| `notify.sh TEXT` | One Telegram message to the owner |
-| `/data/workspace/sent.md` | A copy of what jobs sent (last 300 lines). The bot's instructions tell it to read this when the owner refers to something it does not remember sending |
+| `config.sh job "M H D M W" NAME "PROMPT"` | How a job is added: by the agent, when the owner asks in chat. Validates the schedule and the name, tells the owner. `config.sh drop NAME` removes it |
+| `/data/cron/jobs`, `/data/cron/prompts/NAME` | The agent's jobs (`SCHEDULE job.sh NAME`) and their prompts, on the volume |
+| `bin/system.cron` | The image's own jobs (the daily recycle at 04:00). Root-owned, replaced by every image update |
+| `/data/cron/crontab` | What Supercronic runs: the image's jobs plus the agent's, rebuilt by `config.sh apply` at every start and after every change. **Only well-formed `job.sh NAME` lines are copied**: anything else written into the files never runs |
+| `job.sh NAME` | Runs the prompt in a separate Claude session (`claude -p`), sends the answer to the owner on Telegram, alerts the owner if it fails or exceeds `JOB_TIMEOUT` (default 900 s) |
+| `/data/workspace/sent.md` | A copy of what jobs sent (last 300 lines), for the agent to consult |
 
-Example line:
-
-```
-0 8 * * *  job.sh news "Summarise today's AI news in five bullets"
-```
-
-The seeded file contains one job: a daily recycle at 04:00 (`pkill -x script`). The container restarts and Claude continues the conversation.
+Why the filter: a cron line runs outside Claude Code, with no permission check, no hook and no audit record. Limiting cron to `job.sh` keeps every scheduled action inside a Claude session under the managed policy. On hosts without a hard floor the agent's shell could still rewrite these files; the filter removes the documented, easy path, and a restart restores the image's jobs.
 
 ## Why a separate session, with its own config directory
 
@@ -42,4 +37,5 @@ Claude Code's own in-session scheduler is disabled (`CLAUDE_CODE_DISABLE_CRON=1`
 
 - Whether jobs share the subscription's usage window with the bot.
 - The daily recycle (`pkill -x script` at 04:00): check the service log the morning after.
+- A job added with `config.sh job` on Railway (the earlier verification used a hand-written crontab line).
 - The downtime notice after a real outage, and a failing or hung job in production.

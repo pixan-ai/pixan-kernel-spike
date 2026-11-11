@@ -92,7 +92,7 @@ bin/peer.sh                   what fellow agents may do over SSH: look, and set 
 bin/notify.sh                 one Telegram message to the owner
 bin/denials.sh                loaded policy + tool errors from the latest session
 policy/managed-settings.json  the managed policy and hooks
-seed/crontab                  the schedule seeded on the volume (daily recycle; add your jobs)
+bin/system.cron               the image's own scheduled jobs (daily recycle)
 policy/CLAUDE.md              what the agent is told about its limits (managed: root-owned, updated with the image)
 tests/                        acceptance tests (run inside the built image) and docs-vs-code checks
 docs/                         architecture, findings, deployment, threat model, secrets, repository settings, releasing

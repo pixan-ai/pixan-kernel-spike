@@ -47,8 +47,7 @@ cd "$WS"
 [ -z "${PEER_PUBLIC_KEYS:-}" ] || peer.sh serve
 # The audit log keeps its last 10000 events (the screen log is overwritten at every start).
 [ ! -f /data/audit.jsonl ] || { tail -n 10000 /data/audit.jsonl > /data/audit.tmp && mv /data/audit.tmp /data/audit.jsonl; }
-# Scheduled jobs: the crontab lives on the volume (seeded once, then the owner's). If the last heartbeat is old, say so: jobs due meanwhile did not run.
-mkdir -p /data/cron && cp -n /opt/seed/crontab /data/cron/crontab
+# Scheduled jobs: config.sh apply (above) built /data/cron/crontab from the image's jobs and the agent's. If the last heartbeat is old, say so: jobs due meanwhile did not run.
 [ ! -e /data/cron/alive ] || (( $(date +%s) - $(stat -c %Y /data/cron/alive) < 300 )) || notify.sh "Back online. I was down from $(date -r /data/cron/alive '+%F %H:%M') to $(date '+%H:%M'); jobs scheduled in between did not run." || true
 (while touch /data/cron/alive; do sleep 30; done) &
 supercronic -quiet -inotify /data/cron/crontab &

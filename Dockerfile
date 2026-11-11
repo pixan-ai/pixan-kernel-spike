@@ -17,7 +17,6 @@ RUN curl -fsSL -o /usr/local/bin/supercronic "https://github.com/aptible/supercr
 # Managed policy: owned by root, not editable by the agent, highest precedence in Claude Code.
 COPY policy/ /etc/claude-code/
 COPY --chmod=755 bin/ /usr/local/bin/
-COPY seed/ /opt/seed/
 
 USER 1001
 ENV DISABLE_AUTOUPDATER=1 CLAUDE_CONFIG_DIR=/data/config TELEGRAM_STATE_DIR=/data/config/channels/telegram CLAUDE_CODE_ENABLE_PROMPT_SUGGESTION=false CLAUDE_CODE_DISABLE_CRON=1

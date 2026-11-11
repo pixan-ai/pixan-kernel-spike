@@ -7,6 +7,7 @@ The host's variables are for installation: credentials, the owner, keys. Day-to-
 | take part in a Telegram group | `config.sh group -1001234567890` | Listens in that group, no mention needed |
 | also listen to a user or bot in its groups | `config.sh sender 123456789` | That id is heard in every listed group (never in private) |
 | remember a fellow agent | `config.sh peer Junior=agent2.railway.internal` | `peer.sh look junior` works |
+| run a prompt on a schedule | `config.sh job "0 8 * * *" news "Summarise…"` | See [CRON.md](CRON.md) |
 | undo any of these | `config.sh drop VALUE` | Removes the lines with that value |
 
 `TELEGRAM_GROUP_IDS` and `TELEGRAM_GROUP_SENDERS` still work: `start.sh` adds them to the same file at every start.
