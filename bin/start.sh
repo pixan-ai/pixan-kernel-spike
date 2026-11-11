@@ -43,6 +43,8 @@ cd "$WS"
 # Opt-in peer view (docs/PEERS.md): fellow agents whose public keys are listed may read this agent's screen; PEER_SSH_KEY lets this one look at others.
 (umask 077; mkdir -p /data/ssh; [ -z "${PEER_SSH_KEY:-}" ] || printf '%s\n' "$PEER_SSH_KEY" > /data/ssh/peer_key)
 [ -z "${PEER_PUBLIC_KEYS:-}" ] || peer.sh serve
+# The audit log keeps its last 10000 events (the screen log is overwritten at every start).
+[ ! -f /data/audit.jsonl ] || { tail -n 10000 /data/audit.jsonl > /data/audit.tmp && mv /data/audit.tmp /data/audit.jsonl; }
 # Scheduled jobs: the crontab lives on the volume (seeded once, then the owner's). If the last heartbeat is old, say so: jobs due meanwhile did not run.
 mkdir -p /data/cron && cp -n /opt/seed/crontab /data/cron/crontab
 [ ! -e /data/cron/alive ] || (( $(date +%s) - $(stat -c %Y /data/cron/alive) < 300 )) || notify.sh "Back online. I was down from $(date -r /data/cron/alive '+%F %H:%M') to $(date '+%H:%M'); jobs scheduled in between did not run." || true

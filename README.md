@@ -67,7 +67,7 @@ Defense in depth, each layer using an official mechanism:
 2. **Managed policy**: root-owned file; `deny` rules for credentials and for writes to the config, plugin and policy paths.
 3. **Permission classifier (auto mode)**: reviews every action that is not explicitly allowed.
 4. **Never waits for a person**: `permissions.denyInsteadOfPrompting` denies any call that would need an approval prompt; the agent is told and carries on. Nothing is ever allowed by it.
-5. **Hooks**: every tool call, failure and denial is appended to `/data/audit.jsonl`; credential failures alert the owner on Telegram.
+5. **Hooks**: every tool call, failure and denial adds one short line to `/data/audit.jsonl` (when, event, tool, mode, error; the last 10000 are kept, the full detail is in the session transcript); credential failures alert the owner on Telegram.
 6. **Container**: non-root user (uid 1001), one volume, no secrets baked into the image.
 
 Known limits (read before trusting it):

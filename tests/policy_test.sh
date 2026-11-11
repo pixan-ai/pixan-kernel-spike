@@ -10,7 +10,7 @@ STUBS=$(mktemp -d); ARGS=$STUBS/curl.args; FAILS=0
 chmod 755 "$STUBS"
 cat > "$STUBS/curl" <<EOF
 #!/usr/bin/env bash
-printf '%s\n' "\$@" > "$ARGS"
+printf '%s\n' "\$@" > "$ARGS"; cat > "$ARGS.stdin"
 EOF
 chmod 755 "$STUBS/curl"
 
@@ -24,7 +24,7 @@ parses() { printf '%s\n' "$1" | bash -n; }
 sent() { grep -qF -- "$1" "$ARGS"; }
 hook() { jq -r "$1" "$POLICY"; }
 run_hook() {  # run_hook JQ-PATH-TO-COMMAND STDIN-JSON: runs the hook with an empty environment, as a POSIX shell
-  printf '%s' "$2" | env -i PATH="$STUBS:/usr/bin:/bin" sh -c "$(hook "$1")" > /dev/null 2>&1
+  printf '%s' "$2" | env -i PATH="$STUBS:${BIN:-/usr/local/bin}:/usr/bin:/bin" sh -c "$(hook "$1")" > /dev/null 2>&1
 }
 
 check "the policy is valid JSON" setting .
@@ -64,18 +64,23 @@ printf 'TELEGRAM_BOT_TOKEN=123:abc\nOWNER_TELEGRAM_ID=42\n' > "$CREDS"
 
 rm -f "$ARGS"
 check "StopFailure hook runs" run_hook '.hooks.StopFailure[0].hooks[0].command' '{"error":"authentication_failed"}'
-check "...and calls the bot API with the token from the credentials file" sent "https://api.telegram.org/bot123:abc/sendMessage"
+on_stdin() { grep -qF -- "$1" "$ARGS.stdin"; }
+off_the_command_line() { ! sent "$1"; }
+check "...and calls the bot API with the token from the credentials file" on_stdin "https://api.telegram.org/bot123:abc/sendMessage"
+check "...which never appears on a command line" off_the_command_line "123:abc"
 check "...addressed to the owner" sent "chat_id=42"
 check "...saying what failed" sent "authentication_failed"
 
 rm -f "$ARGS"
 check "Notification hook runs" run_hook '.hooks.Notification[0].hooks[0].command' '{"message":"Claude needs your permission to use Bash"}'
 check "...and relays the permission prompt to the owner" sent "Claude needs your permission to use Bash"
-check "...through the bot API" sent "https://api.telegram.org/bot123:abc/sendMessage"
+check "...through the bot API" on_stdin "https://api.telegram.org/bot123:abc/sendMessage"
 
 : > /data/audit.jsonl
-check "PostToolUse hook runs" run_hook '.hooks.PostToolUse[0].hooks[0].command' '{"tool":"Bash"}'
-check "...and appends the event to the audit log" test "$(tail -1 /data/audit.jsonl)" = '{"tool":"Bash"}'
+check "PostToolUse hook runs" run_hook '.hooks.PostToolUse[0].hooks[0].command' '{"hook_event_name":"PostToolUse","tool_name":"Bash","permission_mode":"auto","tool_input":{"command":"SECRET-COMMAND"},"tool_response":"LONG-OUTPUT"}'
+check "...and appends one short line: when, which event, which tool, which mode" test "$(tail -1 /data/audit.jsonl | jq -c '[.event, .tool, .mode, (.at | length > 10)]')" = '["PostToolUse","Bash","auto",true]'
+check "...without the tool's input or output (the transcript already has them)" bash -c '! grep -qE "SECRET-COMMAND|LONG-OUTPUT" /data/audit.jsonl'
+check "the three audit hooks write the same record" test "$(jq -r '[.hooks.PostToolUse, .hooks.PostToolUseFailure, .hooks.PermissionDenied] | map(.[0].hooks[0].command) | unique | length' "$POLICY")" = 1
 
 matcher=$(hook '.hooks.StopFailure[0].matcher')
 matches() { grep -Eqx -- "$matcher" <<<"$1"; }
