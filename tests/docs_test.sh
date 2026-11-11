@@ -2,13 +2,10 @@
 # shellcheck disable=SC2329,SC2016  # helpers are called through check "$@"; regexes and jq programs are single-quoted on purpose
 # Documentation-vs-code drift tests: what the docs say must be what the scripts do. Run from a checkout (no image needed).
 set -uo pipefail
+# shellcheck source=tests/lib.sh
+. "$(dirname "$(readlink -f "$0")")/lib.sh"
 cd "$(dirname "$0")/.." || exit 1
-FAILS=0
 
-check() {  # check "description" command...
-  local d=$1; shift
-  if "$@"; then echo "ok   - $d"; else echo "FAIL - $d"; FAILS=$((FAILS + 1)); fi
-}
 listed() { grep -qxF -- "$1" <<<"$2"; }
 exists() { [ -e "$1" ]; }
 

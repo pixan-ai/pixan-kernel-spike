@@ -5,7 +5,7 @@ FROM oven/bun:1-debian@sha256:93d5032fe06d163427822dc1598f420363759bb18155c9cc90
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 # Unpinned apt packages on purpose: pinned Debian versions vanish from the mirror; Dependabot bumps the base image.
 # hadolint ignore=DL3008
-RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates git jq procps openssh-server openssh-client \
+RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates git jq procps openssh-server openssh-client tini \
  && rm -rf /var/lib/apt/lists/* \
  && useradd -m -u 1001 agent && mkdir -p /data /opt/seed /run/sshd && chown agent:agent /data /opt/seed
 
@@ -22,7 +22,8 @@ COPY seed/ /opt/seed/
 USER 1001
 ENV DISABLE_AUTOUPDATER=1 CLAUDE_CONFIG_DIR=/data/config TELEGRAM_STATE_DIR=/data/config/channels/telegram CLAUDE_CODE_ENABLE_PROMPT_SUGGESTION=false CLAUDE_CODE_DISABLE_CRON=1
 WORKDIR /data/workspace
-ENTRYPOINT ["/usr/local/bin/start.sh"]
+# tini is PID 1: it forwards SIGTERM (bash as PID 1 ignores it, so the host had to kill the container) and reaps orphans.
+ENTRYPOINT ["tini", "-g", "--", "/usr/local/bin/start.sh"]
 
 FROM base AS agent
 ARG CLAUDE_CODE_VERSION=2.1.319

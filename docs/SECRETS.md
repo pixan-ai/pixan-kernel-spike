@@ -24,7 +24,7 @@ Secrets are passed as environment variables at run time and are never baked into
 1. Revoke at the issuer.
 2. Set the new value on the host.
 3. Redeploy or restart.
-4. Verify without printing secrets: the start log says `oauth token: N chars, starts with sk-ant-oat01-: yes, whitespace: no`, and the bot answers.
+4. Verify without printing secrets: the start log says `oauth token: N chars, starts with sk-ant-oat01-: yes`, and the bot answers.
 5. Look at the issuer's usage page for the window of exposure.
 
 Never run `printenv` to check a value. A token copied from a phone can arrive truncated or with line breaks: `start.sh` removes whitespace and the log line above tells you the length.

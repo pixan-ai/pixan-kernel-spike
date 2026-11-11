@@ -9,6 +9,7 @@ services:
     volumes:
       - data:/data
     restart: unless-stopped
+    mem_limit: ${MEM_LIMIT:-4g}  # a long session grows; a cap turns a leak into a restart instead of a bill
     init: true
 volumes:
   data:

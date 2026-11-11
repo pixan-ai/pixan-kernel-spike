@@ -4,14 +4,16 @@
 # against an empty /data, with a stub `script` that records what claude would have been started with.
 # CI runs this inside the built image; START points at the entrypoint under test.
 set -uo pipefail
+# shellcheck source=tests/lib.sh
+. "$(dirname "$(readlink -f "$0")")/lib.sh"
 cd / || exit 1  # the tests empty /data, which can be the working directory of the container
 START=${START:-/usr/local/bin/start.sh}
-STUBS=$(mktemp -d); OUT=$(mktemp); ERR=$(mktemp); FAILS=0
+STUBS=$(mktemp -d); OUT=$(mktemp); ERR=$(mktemp)
 chmod 755 "$STUBS"; chmod 644 "$OUT" "$ERR"
 cat > "$STUBS/script" <<'EOF'
 #!/usr/bin/env bash
 # Stub pty: record who would run claude, with which credentials and command, then "exit" like claude dying.
-{ echo "uid=$(id -u)"; echo "oauth=${CLAUDE_CODE_OAUTH_TOKEN:-}"; echo "cmd=$2"; } > /data/probe
+{ echo "uid=$(id -u)"; echo "oauth=${CLAUDE_CODE_OAUTH_TOKEN:-}"; echo "bottoken=${TELEGRAM_BOT_TOKEN:-}"; echo "cmd=$2"; } > /data/probe
 echo "owner said: SCREEN-MARKER" > /data/tui.log; sleep 3  # long enough for a 1 s mirror to fire
 EOF
 chmod 755 "$STUBS/script"
@@ -25,7 +27,8 @@ chmod 755 "$STUBS/sleep"
 cat > "$STUBS/curl" <<'EOF'
 #!/usr/bin/env bash
 # Stub Telegram: answer getMe with the HTTP status in TG_STATUS (default 200); 000 = no network.
-printf '%s\n' "$*" >> /data/curl-calls 2>/dev/null; cat > /dev/null
+printf '%s\n' "$*" >> /data/curl-calls 2>/dev/null
+grep -q 'bot123:abc/' || { printf 000; exit 7; }  # the real request carries the token on stdin; without it there is no answer
 while [ $# -gt 1 ]; do [ "$1" != -o ] || [ "${TG_STATUS:-200}" != 200 ] || echo '{"ok":true,"result":{"id":555,"username":"Test_bot","first_name":"Test"}}' > "$2"; shift; done
 printf '%s' "${TG_STATUS:-200}"; [ "${TG_STATUS:-200}" != 000 ] || exit 7
 EOF
@@ -38,10 +41,6 @@ run() {  # run the entrypoint on a fresh, root-owned /data with the given extra 
   pkill -u 1001 2>/dev/null; mkdir -p /data /opt/seed/config; [ -e /opt/seed/crontab ] || echo "# seed" > /opt/seed/crontab; [ -e /opt/seed/config/plugins/installed_plugins.json ] || { mkdir -p /opt/seed/config/plugins; echo '{"installPath":"/opt/seed/config/plugins/cache/x"}' > /opt/seed/config/plugins/installed_plugins.json; }; find /data -mindepth 1 -delete; chown 0:0 /data
   env -i "${base_env[@]}" "$@" timeout 20 "$START" >"$OUT" 2>"$ERR"; RC=$?
   pkill -u 1001 2>/dev/null; return 0
-}
-check() {  # check "description" command...
-  local d=$1; shift
-  if "$@"; then echo "ok   - $d"; else echo "FAIL - $d"; FAILS=$((FAILS + 1)); fi
 }
 probe() { grep -qx "$1" /data/probe 2>/dev/null; }
 token_not_logged() { ! grep -q "abcdef" "$ERR"; }
@@ -56,7 +55,7 @@ check "...and says so in the log" grep -q "claude exited" "$ERR"
 check "claude runs as uid 1001, never root" probe "uid=1001"
 check "/data is handed to uid 1001" test "$(stat -c %u /data)" = 1001
 check "line breaks in the OAuth token are stripped" probe "oauth=sk-ant-oat01-abcdef"
-check "token sanity line, without the token" grep -q "oauth token: 19 chars, starts with sk-ant-oat01-: yes, whitespace: no" "$ERR"
+check "token sanity line, without the token" grep -q "oauth token: 19 chars, starts with sk-ant-oat01-: yes$" "$ERR"
 check "the token value never reaches the log" token_not_logged
 check "claude starts with the official Telegram channel" channel_started
 check "plugin credentials file is private (600)" test "$(stat -c %a /data/config/channels/telegram/.env)" = 600
@@ -114,6 +113,9 @@ check "the bot's own Telegram identity is kept for the session hook" test "$(jq 
 seq 1 10050 > /data/audit.jsonl; chown 1001 /data/audit.jsonl; again
 check "the audit log is trimmed to its last 10000 lines at start" test "$(wc -l < /data/audit.jsonl) $(head -1 /data/audit.jsonl)" = "10000 51"
 
+token_gone() { grep -qx "bottoken=" /data/probe; }
+check "the bot token is no longer in the environment when Claude starts" token_gone
+
 run ANTHROPIC_API_KEY=dummy-api-key-0123456789ABCDEFGHIJ
 check "API key switch: its last 20 chars are pre-approved" test "$(jq -c '.customApiKeyResponses.approved' /data/config/.claude.json)" = '["0123456789ABCDEFGHIJ"]'
 
@@ -131,6 +133,10 @@ check "Telegram unreachable -> still starts (a hiccup is not a verdict)" probe "
 base_env=(PATH="$STUBS:$PATH" OWNER_TELEGRAM_ID=42)
 run CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-x
 check "no bot token -> fails fast naming it" failed_fast_on_bot_token
+base_env=(PATH="$STUBS:$PATH" TELEGRAM_BOT_TOKEN=123:abc)
+run CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-x
+failed_fast_on_owner() { test "$RC" = 1 && grep -q "OWNER_TELEGRAM_ID" "$ERR" && test ! -e /data/probe; }
+check "no owner id -> fails fast naming it" failed_fast_on_owner
 
 rm -rf "$STUBS" "$OUT" "$ERR"
 echo "$FAILS failed"; exit $((FAILS > 0))

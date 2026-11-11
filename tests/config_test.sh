@@ -2,13 +2,11 @@
 # shellcheck disable=SC2329,SC2016  # helpers are called through check "$@"
 # Acceptance tests for bin/config.sh: the settings an agent may change itself, with a stub `curl` as Telegram.
 set -uo pipefail
+# shellcheck source=tests/lib.sh
+. "$(dirname "$(readlink -f "$0")")/lib.sh"
 cd / || exit 1
-BIN=${BIN:-/usr/local/bin}; STUBS=$(mktemp -d); FAILS=0
+BIN=${BIN:-/usr/local/bin}; STUBS=$(mktemp -d)
 A=/data/config/channels/telegram/access.json
-check() {  # check "description" command...
-  local d=$1; shift
-  if "$@"; then echo "ok   - $d"; else echo "FAIL - $d"; FAILS=$((FAILS + 1)); fi
-}
 printf '#!/usr/bin/env bash\nprintf "%%s\\n" "$*" >> /data/curl-args; cat > /dev/null\n' > "$STUBS/curl"; chmod 755 "$STUBS" "$STUBS/curl"
 config() { env PATH="$STUBS:$PATH" "$BIN/config.sh" "$@" > /dev/null 2>&1; }
 access() { jq -c "$1" $A; }

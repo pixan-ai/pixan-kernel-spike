@@ -3,12 +3,10 @@
 # Acceptance tests for the peer view (bin/peer.sh): a real SSH server and a real client, both as the agent user.
 # What a fellow agent can do is read the screen; everything else must be refused. CI runs this inside the built image.
 set -uo pipefail
+# shellcheck source=tests/lib.sh
+. "$(dirname "$(readlink -f "$0")")/lib.sh"
 cd / || exit 1
-BIN=${BIN:-/usr/local/bin}; K=$(mktemp -d); FAILS=0
-check() {  # check "description" command...
-  local d=$1; shift
-  if "$@"; then echo "ok   - $d"; else echo "FAIL - $d"; FAILS=$((FAILS + 1)); fi
-}
+BIN=${BIN:-/usr/local/bin}; K=$(mktemp -d)
 agent() { setpriv --reuid=1001 --regid=1001 --init-groups env HOME=/home/agent "$@"; }
 look() { agent "$BIN/peer.sh" look localhost "$@" 2>&1; }
 sees() { look "$1" | grep -q "$2"; }

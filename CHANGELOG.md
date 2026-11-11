@@ -6,6 +6,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 
 ### Changed
 
+- `tini` is PID 1 (SIGTERM reaches the entrypoint); the bot token is removed from the environment before Claude and the scheduler start; a missing `TELEGRAM_BOT_TOKEN` or `OWNER_TELEGRAM_ID` fails at once; `mem_limit` in compose; the start log no longer prints a `whitespace:` field that could only say "no"; tests share `tests/lib.sh`.
 - Removed `railway.json` (Railway stops reading it on 2026-12-01); the service settings in docs/DEPLOY-RAILWAY.md are the configuration.
 - Alert hooks use `notify.sh`: the bot token no longer appears on a command line.
 - The audit log records one short line per event instead of the whole event, and keeps its last 10000 lines (it grew without limit and duplicated the transcript).
