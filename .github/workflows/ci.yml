@@ -51,8 +51,26 @@ jobs:
           for t in start tools policy cron peer config; do
             docker run --rm --user 0 --entrypoint bash -v "$PWD/tests:/tests:ro" pixan-kernel-spike:ci "/tests/${t}_test.sh" || exit 1
           done
-      # Report-only until the baseline is known: set exit-code: "1" to make fixable HIGH/CRITICAL findings block.
-      - name: Vulnerabilities (Trivy)
+      # The gate: what this project publishes (the base target, no Anthropic software) must have no fixable CRITICAL vulnerability.
+      - name: Build the publishable base target
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          target: base
+          push: false
+          load: true
+          tags: pixan-kernel-spike:base
+          cache-from: type=gha
+      - name: Vulnerabilities in the base target (Trivy, blocking)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: pixan-kernel-spike:base
+          format: table
+          severity: CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+      # The agent target adds Claude Code and the plugin, which this project does not patch: report only.
+      - name: Vulnerabilities in the agent target (Trivy, report)
         continue-on-error: true
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
@@ -64,4 +82,4 @@ jobs:
       - name: Show the Trivy report in the job summary
         if: always()
         run: |
-          { echo '### Trivy: fixable HIGH and CRITICAL (report-only)'; echo '```'; cat trivy.txt 2>/dev/null || echo 'no report'; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          { echo '### Trivy, agent target: fixable HIGH and CRITICAL (report only)'; echo '```'; cat trivy.txt 2>/dev/null || echo 'no report'; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
