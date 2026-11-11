@@ -41,7 +41,7 @@ for rule in 'Read(**/.env)' 'Read(**/.env.*)' 'Edit(//etc/claude-code/**)' 'Edit
 done
 check "auto mode keeps the built-in rules and forbids leaking credentials" \
   setting '.autoMode.hard_deny | (index("$defaults") != null) and (map(test("credential"; "i")) | any)'
-for event in SessionStart PostToolUse PostToolUseFailure PermissionDenied StopFailure Notification; do
+for event in SessionStart UserPromptSubmit PostToolUse PostToolUseFailure PermissionDenied StopFailure Notification; do
   check "policy has a $event hook" setting ".hooks.$event | length > 0"
 done
 mapfile -t cmds < <(jq -r '.hooks[][].hooks[].command' "$POLICY")
@@ -60,6 +60,22 @@ check "...and says nothing about a name it does not know" silent_about "Telegram
 rm -f "$(dirname "$CREDS")/me.json"
 check "...and still works without that file" says "The current date"
 printf 'TELEGRAM_BOT_TOKEN=123:abc\nOWNER_TELEGRAM_ID=42\n' > "$CREDS"
+
+# --- what the agent is shown with every message it receives: its own recent job deliveries
+context() { env -i PATH=/usr/bin:/bin TZ=UTC sh -c "$(hook '.hooks.UserPromptSubmit[0].hooks[0].command')" 2>&1; }
+shows() { context | grep -q -- "$1"; }
+hides() { ! shows "$1"; }
+mkdir -p /data/workspace; now=$(date +%s); long=$(printf 'x%.0s' $(seq 1 500))
+{ echo "{\"at\":$((now - 90000)),\"name\":\"old\",\"text\":\"YESTERDAY\"}"
+  for i in 1 2 3 4 5 6; do echo "{\"at\":$((now - 600 + i)),\"name\":\"news\",\"text\":\"ITEM-$i\"}"; done
+  echo "{\"at\":$now,\"name\":\"big\",\"text\":\"$long\"}"; } > /data/workspace/sent.jsonl
+check "every message comes with the agent's recent job deliveries" shows "ITEM-6"
+check "...framed as already sent, not to be resent" shows "you already sent these through scheduled jobs"
+check "...the last five only" hides "ITEM-2"
+check "...from the last 24 hours only" hides "YESTERDAY"
+check "...each cut at 400 characters" test "$(context | grep -o 'x*' | sort | tail -1 | wc -c)" = 401
+rm -f /data/workspace/sent.jsonl
+check "...and nothing at all when no job has delivered anything" test -z "$(context)"
 
 rm -f "$ARGS"
 check "StopFailure hook runs" run_hook '.hooks.StopFailure[0].hooks[0].command' '{"error":"authentication_failed"}'

@@ -11,7 +11,7 @@ Jobs survive restarts and redeploys because they are lines in a file on the volu
 | `bin/system.cron` | The image's own jobs (the daily recycle at 04:00). Root-owned, replaced by every image update |
 | `/data/cron/crontab` | What Supercronic runs: the image's jobs plus the agent's, rebuilt by `config.sh apply` at every start and after every change. **Only well-formed `job.sh NAME` lines are copied**: anything else written into the files never runs |
 | `job.sh NAME` | Runs the prompt in a separate Claude session (`claude -p`), which only writes the message; the script sends it to the owner in private, or to a group the agent is in if the job was given one (`config.sh job … GROUP_ID`). Failures always go to the owner. It alerts the owner if it fails or exceeds `JOB_TIMEOUT` (default 900 s) |
-| `/data/workspace/sent.md` | A copy of what jobs sent (last 300 lines), for the agent to consult |
+| `/data/workspace/sent.jsonl` | One line per delivery (when, job, destination, text; last 500). A `UserPromptSubmit` hook shows the agent its last five deliveries of the last 24 hours, each cut at 400 characters, with every message it receives, so "explain the first item" works. The file is also there for the agent to read |
 
 Why the filter: a cron line runs outside Claude Code, with no permission check, no hook and no audit record. Limiting cron to `job.sh` keeps every scheduled action inside a Claude session under the managed policy. On hosts without a hard floor the agent's shell could still rewrite these files; the filter removes the documented, easy path, and a restart restores the image's jobs.
 
@@ -35,6 +35,7 @@ Claude Code's own in-session scheduler is disabled (`CLAUDE_CODE_DISABLE_CRON=1`
 
 ## Not verified yet
 
+- Whether the `UserPromptSubmit` hook fires for messages that arrive through the Telegram channel. If it does not, the agent still has the file and its instructions.
 - Whether jobs share the subscription's usage window with the bot.
 - The daily recycle (`pkill -x script` at 04:00): check the service log the morning after.
 - On Railway (2026-11-10): a job added with `config.sh job` ran and was dropped by the agent afterwards. A job meant for a group failed, because jobs could only reach the owner and the job's session looked for a tool to send with; fixed, to be re-tested.

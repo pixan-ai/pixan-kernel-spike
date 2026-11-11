@@ -111,8 +111,9 @@ check "...and private messages stay owner-only" test "$(group '.allowFrom - ["-1
 
 check "the bot's own Telegram identity is kept for the session hook" test "$(jq -r .result.username /data/config/channels/telegram/me.json)" = Test_bot
 
-seq 1 10050 > /data/audit.jsonl; chown 1001 /data/audit.jsonl; again
+seq 1 10050 > /data/audit.jsonl; seq 1 520 > /data/workspace/sent.jsonl; chown 1001 /data/audit.jsonl /data/workspace/sent.jsonl; again
 check "the audit log is trimmed to its last 10000 lines at start" test "$(wc -l < /data/audit.jsonl) $(head -1 /data/audit.jsonl)" = "10000 51"
+check "...and the record of job deliveries to its last 500" test "$(wc -l < /data/workspace/sent.jsonl) $(head -1 /data/workspace/sent.jsonl)" = "500 21"
 
 token_gone() { grep -qx "bottoken=" /data/probe; }
 check "the bot token is no longer in the environment when Claude starts" token_gone
