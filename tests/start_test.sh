@@ -35,6 +35,7 @@ EOF
 printf '#!/usr/bin/env bash\necho "$*" > /data/supercronic-args\n' > "$STUBS/supercronic"; chmod 755 "$STUBS/supercronic"
 printf '#!/usr/bin/env bash\necho "$*" > /data/peer-args\n' > "$STUBS/peer.sh"; chmod 755 "$STUBS/peer.sh"
 printf '#!/usr/bin/env bash\necho "$*" >> /data/backup-args\n' > "$STUBS/backup.sh"; chmod 755 "$STUBS/backup.sh"
+printf '#!/usr/bin/env bash\necho rang >> /data/doorbell-runs\n' > "$STUBS/doorbell.sh"; chmod 755 "$STUBS/doorbell.sh"
 chmod 755 "$STUBS/curl"
 
 base_env=(PATH="$STUBS:$PATH" TELEGRAM_BOT_TOKEN=123:abc OWNER_TELEGRAM_ID=42)
@@ -126,6 +127,13 @@ check "the storage credentials are kept in a private file (600)" test "$(stat -c
 check "...and neither they nor the restore key stay in the environment of Claude" grep -qx "backupsecrets=" /data/probe
 rm -f /data/backup-args; again
 check "a volume that already has data is never restored over" test ! -e /data/backup-args
+
+touch /data/idle; again
+check "sleep is off by default: a leftover marker changes nothing" test ! -e /data/doorbell-runs
+touch /data/idle; env -i "${base_env[@]}" CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-x IDLE_SLEEP_MINUTES=30 timeout 20 "$START" >"$OUT" 2>"$ERR"; pkill -u 1001 2>/dev/null
+check "IDLE_SLEEP_MINUTES: an agent that was asleep waits at the doorbell before Claude starts" test -s /data/doorbell-runs
+check "...then starts Claude and is no longer marked asleep" bash -c 'grep -q "exec claude" /data/probe && test ! -e /data/idle'
+check "...and waking up is not reported as downtime" bash -c '! grep -q "Back online" /data/curl-calls'
 
 run ANTHROPIC_API_KEY=dummy-api-key-0123456789ABCDEFGHIJ
 check "API key switch: its last 20 chars are pre-approved" test "$(jq -c '.customApiKeyResponses.approved' /data/config/.claude.json)" = '["0123456789ABCDEFGHIJ"]'

@@ -30,6 +30,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 
 ### Added
 
+- Opt-in sleep (`IDLE_SLEEP_MINUTES`): Claude stops after a quiet period and a Telegram webhook wakes the agent; the official plugin still receives the message by polling. On Railway with Serverless an idle agent used no memory, and answered 2 to 3 s after a message. See docs/SLEEP.md.
 - Unanswered-message alert: a message whose turn has not ended after ten minutes is reported to the owner, once.
 - docs/GETTING-STARTED.md: installation for a first-time user, and what to tell the agent afterwards.
 - Backup and restore: a nightly backup of memory, conversations, workspace, settings and jobs, encrypted with age inside the container and sent with rclone (Google Drive by default, Cloudflare R2 as an alternative); restore onto an empty volume by setting the private key. See docs/BACKUP.md.

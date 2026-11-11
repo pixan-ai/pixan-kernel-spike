@@ -52,12 +52,22 @@ cd "$WS"
 [ ! -f /data/audit.jsonl ] || { tail -n 10000 /data/audit.jsonl > /data/audit.tmp && mv /data/audit.tmp /data/audit.jsonl; }
 [ ! -f "$WS/sent.jsonl" ] || { tail -n 500 "$WS/sent.jsonl" > "$WS/sent.tmp" && mv "$WS/sent.tmp" "$WS/sent.jsonl"; }
 # Scheduled jobs: config.sh apply (above) built /data/cron/crontab from the image's jobs and the agent's. If the last heartbeat is old, say so: jobs due meanwhile did not run.
-[ ! -e /data/cron/alive ] || (( $(date +%s) - $(stat -c %Y /data/cron/alive) < 300 )) || notify.sh "Back online. I was down from $(date -r /data/cron/alive '+%F %H:%M') to $(date '+%H:%M'); jobs scheduled in between did not run." || true
+[ ! -e /data/cron/alive ] || [ -e /data/idle ] || (( $(date +%s) - $(stat -c %Y /data/cron/alive) < 300 )) || notify.sh "Back online. I was down from $(date -r /data/cron/alive '+%F %H:%M') to $(date '+%H:%M'); jobs scheduled in between did not run." || true
 (while touch /data/cron/alive; do sleep 30; done) &
 supercronic -quiet -inotify /data/cron/crontab &
-# A restart continues the last conversation. If claude then dies within a minute, the next start opens a fresh one instead of looping on a session it cannot load.
-C=; ls "$CFG"/projects/*/*.jsonl > /dev/null 2>&1 && [ ! -e /data/fresh ] && C=--continue; rm -f /data/fresh
-tail -f /dev/null | script -qfc "stty cols 120 rows 40; exec claude $C --channels plugin:telegram@claude-plugins-official ${CLAUDE_FLAGS:-}" /data/tui.log > /dev/null || true  # tail dies of SIGPIPE when claude exits; still report it below
-[ -z "$C" ] || (( SECONDS > 60 )) || touch /data/fresh
-(( SECONDS > 60 )) || sleep 60  # crash-loop brake: do not hammer the APIs with restarts
+# Opt-in sleep (IDLE_SLEEP_MINUTES, docs/SLEEP.md): after that long without activity Claude is stopped and doorbell.sh waits for
+# Telegram to announce a message; then Claude starts again and continues the conversation. /data/idle marks "asleep".
+while :; do
+  T0=$SECONDS
+  [ ! -e /data/idle ] || [ -z "${IDLE_SLEEP_MINUTES:-}" ] || doorbell.sh || sleep 30
+  rm -f /data/idle
+  [ -z "${IDLE_SLEEP_MINUTES:-}" ] || (while sleep 30; do (( SECONDS - T0 < IDLE_SLEEP_MINUTES * 60 )) && continue
+      [ -n "$(find "$CFG/projects" -name '*.jsonl' -newermt "-${IDLE_SLEEP_MINUTES} minutes" 2> /dev/null | head -1)" ] || { touch /data/idle; pkill -x script; break; }; done) &
+  # A restart continues the last conversation. If claude then dies within a minute, the next start opens a fresh one instead of looping on a session it cannot load.
+  C=; ls "$CFG"/projects/*/*.jsonl > /dev/null 2>&1 && [ ! -e /data/fresh ] && C=--continue; rm -f /data/fresh
+  tail -f /dev/null | script -qfc "stty cols 120 rows 40; exec claude $C --channels plugin:telegram@claude-plugins-official ${CLAUDE_FLAGS:-}" /data/tui.log > /dev/null || true  # tail dies of SIGPIPE when claude exits; still report it below
+  [ -e /data/idle ] || break
+done
+[ -z "$C" ] || (( SECONDS - T0 > 60 )) || touch /data/fresh
+(( SECONDS - T0 > 60 )) || sleep 60  # crash-loop brake: do not hammer the APIs with restarts
 echo "claude exited" >&2; exit 1

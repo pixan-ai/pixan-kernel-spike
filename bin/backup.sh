@@ -17,4 +17,5 @@ fi
 { tar -C /data -cz --exclude=./config/plugins --exclude=./config/channels/telegram/.env --exclude=./ssh --exclude=./tui.log --exclude='./cron/*.err' . || [ $? = 1 ]; } \
   | age -r "$BACKUP_AGE_RECIPIENT" | rclone rcat "$BACKUP_REMOTE/$(date +%F-%H%M).tar.gz.age" \
   || { notify.sh "⚠️ Tonight's backup failed. Check BACKUP_REMOTE and the storage credentials." || true; exit 1; }
+touch /data/cron/last-backup
 rclone delete "$BACKUP_REMOTE" --include '*.tar.gz.age' --min-age "${BACKUP_KEEP_DAYS:-14}d" || true
