@@ -48,6 +48,8 @@ See [docs/DEPLOY-RAILWAY.md](docs/DEPLOY-RAILWAY.md). The Dockerfile deploys as 
 | `ANTHROPIC_API_KEY` | one of the two | Console API key, billed per use. Takes precedence if both are set |
 | `TELEGRAM_BOT_TOKEN` | yes | Bot token, read by the official plugin |
 | `OWNER_TELEGRAM_ID` | yes | Only this user can talk to the bot (allowlist) |
+| `TELEGRAM_GROUP_IDS` | no | Telegram groups the bot may take part in (see [docs/GROUPS.md](docs/GROUPS.md)). Unset = private chat with the owner only |
+| `TELEGRAM_GROUP_SENDERS` | no | Extra user or bot ids the bot listens to in those groups, besides the owner |
 | `PEER_PUBLIC_KEYS` | no | Public SSH keys of fellow agents allowed to read this agent's screen (see [docs/PEERS.md](docs/PEERS.md)). Unset = no SSH server |
 | `PEER_SSH_KEY` | no | Private SSH key this agent uses to look at fellow agents |
 | `SCREEN_MIRROR` | no | Seconds between copies of the readable screen to the service log (e.g. `30`). Unset = off. The screen contains your conversation: enable only to debug |

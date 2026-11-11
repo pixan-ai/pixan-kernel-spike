@@ -6,6 +6,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 
 ### Changed
 
+- `access.json` is rebuilt from the variables at every start (it was written only once): changing the owner or the groups is a variable change and a redeploy.
 - A restart continues the last conversation (`--continue`). If Claude dies within a minute while continuing, the next start opens a fresh session. A 60-second brake slows crash loops.
 - Fix: the Telegram plugin ran from the image's build path (its registry files hold absolute paths), outside the policy's protection, and a newer image could not replace the copy on the volume. Every start now copies the plugin to the volume and points its registry there.
 - Fix: the agent could not see photos or files sent on Telegram. They land in the plugin's inbox, outside the workspace, and the first read was denied. The inbox is now an additional working directory (still not writable by the agent).
@@ -17,6 +18,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 
 ### Added
 
+- Telegram groups: `TELEGRAM_GROUP_IDS` and `TELEGRAM_GROUP_SENDERS`; no mention needed in a listed group. See docs/GROUPS.md.
 - Peer view (opt-in): a fellow agent holding a listed key can read this agent's screen, status and denials over SSH with a forced command; nothing else. See docs/PEERS.md.
 - `procps` in the image: the seeded daily recycle uses `pkill`.
 - Scheduled jobs that survive restarts: a crontab on the volume run by Supercronic (pinned), `job.sh` (a prompt in its own Claude session, answer sent to the owner and kept in `sent.md`, alert on failure or timeout), a downtime notice at start, and a daily recycle at 04:00. Claude Code's in-session scheduler is disabled. See docs/CRON.md.
