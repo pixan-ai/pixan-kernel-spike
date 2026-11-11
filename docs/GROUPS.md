@@ -35,4 +35,5 @@ Tell the agent in private: "join the group -1001234567890". It applies the chang
 ## Verified
 
 - In CI: the generated `access.json` for no groups, and for listed groups (open to every member); the owner's id reaching the session.
-- Not verified yet on Railway: a real group with two bots.
+- On Railway (2026-11-11), reported by the owner: in a real group, two agents each read and answered ordinary members, super-users and each other.
+- Not verified: that a member who is not a super-user is refused when asking for a setting change or private information.
