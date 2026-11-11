@@ -41,7 +41,7 @@ for rule in 'Read(**/.env)' 'Read(**/.env.*)' 'Edit(//etc/claude-code/**)' 'Edit
 done
 check "auto mode keeps the built-in rules and forbids leaking credentials" \
   setting '.autoMode.hard_deny | (index("$defaults") != null) and (map(test("credential"; "i")) | any)'
-for event in SessionStart UserPromptSubmit PostToolUse PostToolUseFailure PermissionDenied StopFailure Notification; do
+for event in SessionStart UserPromptSubmit Stop PostToolUse PostToolUseFailure PermissionDenied StopFailure Notification; do
   check "policy has a $event hook" setting ".hooks.$event | length > 0"
 done
 mapfile -t cmds < <(jq -r '.hooks[][].hooks[].command' "$POLICY")
@@ -76,6 +76,14 @@ check "...from the last 24 hours only" hides "YESTERDAY"
 check "...each cut at 400 characters" test "$(context | grep -o 'x*' | sort | tail -1 | wc -c)" = 401
 rm -f /data/workspace/sent.jsonl
 check "...and nothing at all when no job has delivered anything" test -z "$(context)"
+
+# --- a message in, an end of turn out: what the unanswered-message alert is built on
+mkdir -p /data/cron; rm -f /data/cron/pending
+mark() { env -i PATH=/usr/bin:/bin sh -c "$(hook '.hooks.UserPromptSubmit[0].hooks[1].command')"; }
+mark; first=$(cat /data/cron/pending); sleep 1; mark
+check "an incoming message is time-stamped, and a second one keeps the first time" test -n "$first" -a "$(cat /data/cron/pending)" = "$first"
+touch /data/cron/pending.told; env -i PATH=/usr/bin:/bin sh -c "$(hook '.hooks.Stop[0].hooks[0].command')"
+check "the end of the turn clears it" test ! -e /data/cron/pending -a ! -e /data/cron/pending.told
 
 rm -f "$ARGS"
 check "StopFailure hook runs" run_hook '.hooks.StopFailure[0].hooks[0].command' '{"error":"authentication_failed"}'

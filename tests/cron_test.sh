@@ -69,6 +69,13 @@ check "watchdog: gone twice in a row -> the owner is told" sent_to_owner "Telegr
 check "...and Claude is restarted" grep -qx -- "-x script" /data/pkill-args
 fresh; : > /data/curl-args; dog CLAUDE_UP=0; dog CLAUDE_UP=0; dog CLAUDE_UP=0
 check "watchdog: Claude not running (starting, asleep) -> it judges nothing" quiet
+fresh; : > /data/curl-args; echo $$ > /data/config/channels/telegram/bot.pid
+echo $(($(date +%s) - 120)) > /data/cron/pending; dog
+check "unanswered: a message two minutes old is not reported" quiet
+echo $(($(date +%s) - 900)) > /data/cron/pending; dog
+check "unanswered: a message left 15 minutes without an end of turn -> the owner is told" sent_to_owner "have not finished with it"
+: > /data/curl-args; dog; dog
+check "...once, not every five minutes" test ! -s /data/curl-args
 check "the daily recycle's command (pkill) exists" test -x /usr/bin/pkill
 if command -v supercronic > /dev/null; then
   check "the image's crontab is valid for supercronic" supercronic -quiet -test "$BIN/system.cron"
