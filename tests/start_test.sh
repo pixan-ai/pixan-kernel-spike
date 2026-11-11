@@ -111,6 +111,9 @@ check "...and private messages stay owner-only" test "$(group '.allowFrom - ["-1
 
 check "the bot's own Telegram identity is kept for the session hook" test "$(jq -r .result.username /data/config/channels/telegram/me.json)" = Test_bot
 
+seq 1 10050 > /data/audit.jsonl; chown 1001 /data/audit.jsonl; again
+check "the audit log is trimmed to its last 10000 lines at start" test "$(wc -l < /data/audit.jsonl) $(head -1 /data/audit.jsonl)" = "10000 51"
+
 run ANTHROPIC_API_KEY=dummy-api-key-0123456789ABCDEFGHIJ
 check "API key switch: its last 20 chars are pre-approved" test "$(jq -c '.customApiKeyResponses.approved' /data/config/.claude.json)" = '["0123456789ABCDEFGHIJ"]'
 

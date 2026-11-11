@@ -56,7 +56,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "cat >> /data/audit.jsonl",
+            "command": "jq -c '{at: (now | todate), event: .hook_event_name, tool: .tool_name, mode: .permission_mode, error: ((.error // .reason // \"\") | tostring | .[0:200])}' >> /data/audit.jsonl",
             "timeout": 5
           }
         ]
@@ -69,7 +69,7 @@
           {
             "type": "command",
             "timeout": 15,
-            "command": "e=$(jq -r .error); . /data/config/channels/telegram/.env; curl -fsS -m 10 \"https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage\" -d chat_id=\"$OWNER_TELEGRAM_ID\" --data-urlencode text=\"⚠️ Agent stopped: $e. Check the credential.\" >/dev/null"
+            "command": "notify.sh \"⚠️ Agent stopped: $(jq -r .error). Check the credential.\""
           }
         ]
       }
@@ -81,7 +81,7 @@
           {
             "type": "command",
             "timeout": 15,
-            "command": "m=$(jq -r .message); . /data/config/channels/telegram/.env; curl -fsS -m 10 \"https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage\" -d chat_id=\"$OWNER_TELEGRAM_ID\" --data-urlencode text=\"⏸ Agent is waiting for a permission: $m\" >/dev/null"
+            "command": "notify.sh \"⏸ Agent is waiting for a permission: $(jq -r .message)\""
           }
         ]
       }
@@ -91,7 +91,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "cat >> /data/audit.jsonl",
+            "command": "jq -c '{at: (now | todate), event: .hook_event_name, tool: .tool_name, mode: .permission_mode, error: ((.error // .reason // \"\") | tostring | .[0:200])}' >> /data/audit.jsonl",
             "timeout": 5
           }
         ]
@@ -102,7 +102,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "cat >> /data/audit.jsonl",
+            "command": "jq -c '{at: (now | todate), event: .hook_event_name, tool: .tool_name, mode: .permission_mode, error: ((.error // .reason // \"\") | tostring | .[0:200])}' >> /data/audit.jsonl",
             "timeout": 5
           }
         ]
