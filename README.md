@@ -50,8 +50,7 @@ See [docs/DEPLOY-RAILWAY.md](docs/DEPLOY-RAILWAY.md). The Dockerfile deploys as 
 | `ANTHROPIC_API_KEY` | one of the two | Console API key, billed per use. Takes precedence if both are set |
 | `TELEGRAM_BOT_TOKEN` | yes | Bot token, read by the official plugin |
 | `OWNER_TELEGRAM_ID` | yes | Only this user can talk to the bot (allowlist) |
-| `TELEGRAM_GROUP_IDS` | no | Telegram groups the bot may take part in (see [docs/GROUPS.md](docs/GROUPS.md)). Unset = private chat with the owner only |
-| `TELEGRAM_GROUP_SENDERS` | no | Extra user or bot ids the bot listens to in those groups, besides the owner |
+| `TELEGRAM_GROUP_IDS` | no | Telegram groups the bot may take part in (see [docs/GROUPS.md](docs/GROUPS.md)). In a listed group it reads and answers every member, people and bots. Unset = private chat with the owner only |
 | `IDLE_SLEEP_MINUTES` | no | Sleep after this many idle minutes and wake on the next message, so an idle agent stops costing (see [docs/SLEEP.md](docs/SLEEP.md)). Unset = always on |
 | `RCLONE_CONF` | no | Storage credentials for the nightly encrypted backup (see [docs/BACKUP.md](docs/BACKUP.md), which lists the other backup variables) |
 | `BACKUP_AGE_KEY` | no | Only to restore: the private key, on a new empty volume. Remove it afterwards |
@@ -68,7 +67,7 @@ The policy lives in [`policy/managed-settings.json`](policy/managed-settings.jso
 
 Defense in depth, each layer using an official mechanism:
 
-1. **Sender allowlist**: the plugin only accepts the configured Telegram user.
+1. **Sender allowlist**: in private the plugin only accepts the configured Telegram user. In a group the owner enabled, every member is heard; there the owner-only rule is an instruction to the agent, not a lock.
 2. **Managed policy**: root-owned file; `deny` rules for credentials and for writes to the config, plugin and policy paths.
 3. **Permission classifier (auto mode)**: reviews every action that is not explicitly allowed.
 4. **Never waits for a person**: `permissions.denyInsteadOfPrompting` denies any call that would need an approval prompt; the agent is told and carries on. Nothing is ever allowed by it.

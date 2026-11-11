@@ -18,11 +18,11 @@ printf 'TELEGRAM_BOT_TOKEN=123:SECRET\nOWNER_TELEGRAM_ID=42\n' > /data/config/ch
 
 config group -1001
 check "group ID: the bot takes part in that group, without a mention" test "$(access '.groups["-1001"].requireMention')" = false
-check "...listening only to the owner there" test "$(access '.groups["-1001"].allowFrom')" = '["42"]'
+check "...and hears everyone there, people and bots" test "$(access '.groups["-1001"].allowFrom')" = '[]'
 check "...and the owner is told, in private" told "Setting changed: group -1001"
-check "...and whoever asked gets a confirmation with the resulting state" bash -c 'env PATH="$0:$PATH" "$1/config.sh" sender 777 | grep -q "ok: sender 777. Groups: \[\"-1001\"\], heard there: \[\"42\",\"777\"\]"' "$STUBS" "$BIN"
-check "sender ID: that user or bot is heard in the groups" test "$(access '.groups["-1001"].allowFrom')" = '["42","777"]'
-check "...but not in private" test "$(access '.allowFrom - ["-1001"]')" = '["42"]'
+check "...and whoever asked gets a confirmation with the resulting state" bash -c 'env PATH="$0:$PATH" "$1/config.sh" group -1002 | grep -q "ok: group -1002. Groups: \[\"-1001\",\"-1002\"\]"' "$STUBS" "$BIN"
+check "there is no per-sender list any more: sender is refused" bash -c '! env PATH="$0:$PATH" "$1/config.sh" sender 777 2>/dev/null' "$STUBS" "$BIN"
+check "...but private messages stay owner-only" test "$(access '.allowFrom - ["-1001","-1002"]')" = '["42"]'
 config group -1001
 check "repeating a setting does not duplicate it" test "$(grep -c 'group -1001' /data/settings)" = 1
 config peer Junior=agent2.railway.internal
@@ -55,9 +55,9 @@ check "the owner cannot be changed from here" refused owner 666
 check "nor any other key" refused TELEGRAM_BOT_TOKEN abc
 
 : > /data/curl-args; config apply
-check "apply rebuilds the access list without telling anyone" test ! -s /data/curl-args -a "$(access '.groups | keys')" = '["-1001"]'
-config drop 777; config drop -1001; config drop Junior
-check "drop removes a sender, a group and a peer" test "$(access '[.groups, .allowFrom]')$(cat /data/settings)" = '[{},["42"]]'
+check "apply rebuilds the access list without telling anyone" test ! -s /data/curl-args -a "$(access '.groups | keys')" = '["-1001","-1002"]'
+config drop -1002; config drop -1001; config drop Junior
+check "drop removes a group and a peer" test "$(access '[.groups, .allowFrom]')$(cat /data/settings)" = '[{},["42"]]'
 check "the access list is replaced in one step, no half-written file left behind" test ! -e /data/config/channels/telegram/access.json.tmp
 
 rm -rf "$STUBS"

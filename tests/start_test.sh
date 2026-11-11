@@ -105,10 +105,10 @@ check "PEER_PUBLIC_KEYS starts the peer view" grep -qx serve /data/peer-args
 check "PEER_SSH_KEY is stored for looking at others, private (600)" test "$(stat -c %a /data/ssh/peer_key)$(cat /data/ssh/peer_key)" = "600PRIVATE-KEY-BODY"
 
 check "no groups unless listed" test "$(jq -c .groups /data/config/channels/telegram/access.json)" = '{}'
-run CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-x TELEGRAM_GROUP_IDS="-1001 -1002" TELEGRAM_GROUP_SENDERS="777"
+run CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-x TELEGRAM_GROUP_IDS="-1001 -1002"
 group() { jq -c "$1" /data/config/channels/telegram/access.json; }
 check "listed groups are open to the bot, without a mention" test "$(group '[.groups | keys[], (.[] | .requireMention)]')" = '["-1001","-1002",false,false]'
-check "...only for the owner and the listed senders, not for every member" test "$(group '.groups["-1001"].allowFrom')" = '["42","777"]'
+check "...and it hears everyone in them, people and bots" test "$(group '.groups["-1001"].allowFrom')" = '[]'
 check "...and private messages stay owner-only" test "$(group '.allowFrom - ["-1001","-1002"]')" = '["42"]'
 
 check "the bot's own Telegram identity is kept for the session hook" test "$(jq -r .result.username /data/config/channels/telegram/me.json)" = Test_bot
