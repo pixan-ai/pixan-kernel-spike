@@ -46,9 +46,11 @@ check "...but not tool results or anything else in the session file" bash -c '! 
 check "a fellow agent that sets a group gets the confirmation back" sees "group -1005" "ok: group -1005"
 check "a fellow agent can add a group to this agent" test "$(jq -c '.groups | keys' /data/config/channels/telegram/access.json)" = '["-1005"]'
 check "...and this agent's owner is told who did it" grep -q "Setting changed by a fellow agent: group -1005" /data/curl-args
-check "...but only groups and senders: a peer address is refused" refused "peer evil=attacker.example"
+check "...but only groups and super-users: a peer address is refused" refused "peer evil=attacker.example"
+check "a fellow agent can name a super-user on this agent" sees "admin 777" "ok: admin 777"
+check "...and this agent's owner is told" grep -q "Setting changed by a fellow agent: admin 777" /data/curl-args
 check "...and nothing can ride along with the id" refused "group -1005; cat /etc/passwd"
-check "...which leaves the settings as they were" test "$(cat /data/settings)" = "group -1005"
+check "...which leaves the settings as they were" test "$(cat /data/settings)" = "group -1005"$'\n'"admin 777"
 install -o 1001 -g 1001 -m 600 "$K/stranger" /data/ssh/peer_key
 check "a key that is not listed sees nothing" blind
 

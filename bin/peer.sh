@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# What fellow agents can do with this agent, over SSH with a forced command (docs/PEERS.md): look, and set its groups.
+# What fellow agents can do with this agent, over SSH with a forced command (docs/PEERS.md): look, and set its groups and super-users.
 #   peer.sh serve             start the SSH server (start.sh does this when PEER_PUBLIC_KEYS is set)
 #   peer.sh look HOST [WHAT]  look at a fellow agent; WHAT is screen (default), status, denials, transcript,
-#                             or "group ID" / "sender ID" / "drop ID" to change that agent's groups
+#                             or "group ID" / "admin ID" / "drop ID" to change that agent's groups and super-users
 #   peer.sh                   what the SSH server runs for every connection: answer one request, nothing else
 set -euo pipefail
 D=/data/ssh; B=$(dirname "$(readlink -f "$0")")
@@ -27,7 +27,7 @@ case "${SSH_ORIGINAL_COMMAND:-}" in
       | select(length > 0) | "[\($t)] \(.[0:600])"' "$f" | tail -n 40 ;;
   status) pgrep -x script > /dev/null && echo "claude: running" || echo "claude: NOT running"
           echo "last heartbeat: $(date -r /data/cron/alive '+%F %T %Z' 2> /dev/null || echo never)" ;;
-  *)  # the one thing a fellow agent may change here: groups and senders, through config.sh (which tells this agent's owner)
-    [[ ${SSH_ORIGINAL_COMMAND:-} =~ ^(group|sender|drop)\ -?[0-9]+$ ]] || { echo "allowed: screen | status | denials | transcript | group ID | sender ID | drop ID" >&2; exit 2; }
+  *)  # the one thing a fellow agent may change here: its groups and super-users, through config.sh (which tells this agent's owner)
+    [[ ${SSH_ORIGINAL_COMMAND:-} =~ ^(group|admin|drop)\ -?[0-9]+$ ]] || { echo "allowed: screen | status | denials | transcript | group ID | admin ID | drop ID" >&2; exit 2; }
     read -r a b <<< "$SSH_ORIGINAL_COMMAND"; exec "$B/config.sh" "$a" "$b" ;;
 esac

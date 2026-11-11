@@ -1,6 +1,6 @@
 # Peer view: one agent looks at another
 
-Opt-in. Lets a fellow agent (or its owner, through it) see what this agent is doing, and add or drop its Telegram groups and senders ([SETTINGS.md](SETTINGS.md)). Nothing else. It is the mechanism used in the earlier pixan stacks (SSH with a forced command), rebuilt with standard tools and no extra code beyond `bin/peer.sh`.
+Opt-in. Lets a fellow agent (or its owner, through it) see what this agent is doing, and add or drop its Telegram groups and super-users ([SETTINGS.md](SETTINGS.md)). Nothing else. It is the mechanism used in the earlier pixan stacks (SSH with a forced command), rebuilt with standard tools and no extra code beyond `bin/peer.sh`.
 
 ## What a peer can do
 
@@ -10,7 +10,7 @@ Opt-in. Lets a fellow agent (or its owner, through it) see what this agent is do
 | `status` | Whether Claude is running and the last heartbeat |
 | `denials` | The loaded policy checks and the latest tool errors |
 | `transcript` | The last 40 messages of the latest conversation: what the owner wrote and what the agent answered (each cut at 600 characters). No tool results |
-| `group ID`, `sender ID`, `drop ID` | Changes this agent's groups and senders through its own `config.sh`; this agent's owner is told |
+| `group ID`, `admin ID`, `drop ID` | Changes this agent's groups and super-users through its own `config.sh`; this agent's owner is told |
 | anything else | Refused |
 
 No shell, no terminal, no port forwarding, no file transfer: the SSH server runs one fixed command per connection (`ForceCommand`), as the unprivileged `agent` user, on port 2222. The command does not receive this agent's environment, so it cannot return its tokens.

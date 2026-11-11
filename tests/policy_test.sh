@@ -60,6 +60,12 @@ check "...and says nothing about a name it does not know" silent_about "Telegram
 rm -f "$(dirname "$CREDS")/me.json"
 check "...and still works without that file" says "The current date"
 printf 'TELEGRAM_BOT_TOKEN=123:abc\nOWNER_TELEGRAM_ID=42\n' > "$CREDS"
+check "SessionStart tells the agent who its owner is, since others can now talk to it in groups" says "Your owner is the Telegram user with id 42"
+echo "admin 777" > /data/settings
+check "...and who else may give instructions (the super-users)" says "These Telegram ids are super-users.*: 777"
+rm /data/settings
+check "...and says nothing about super-users when there are none" silent_about "These Telegram ids"
+check "...without showing the bot token" silent_about "123:abc"
 
 # --- what the agent is shown with every message it receives: its own recent job deliveries
 context() { env -i PATH=/usr/bin:/bin TZ=UTC sh -c "$(hook '.hooks.UserPromptSubmit[0].hooks[0].command')" 2>&1; }
