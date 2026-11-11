@@ -5,6 +5,7 @@ The host's variables are for installation: credentials, the owner, keys. Day-to-
 | Tell the agent to… | It runs | Effect |
 |---|---|---|
 | take part in a Telegram group | `config.sh group -1001234567890` | Reads and answers everyone in that group, no mention needed |
+| let someone else give it instructions | `config.sh admin 123456789` | That Telegram id is a super-user in the agent's groups. Only the owner, in private, names them |
 | remember a fellow agent | `config.sh peer Junior=agent2.railway.internal` | `peer.sh look junior` works |
 | run a prompt on a schedule | `config.sh job "0 8 * * *" news "Summarise…"` | See [CRON.md](CRON.md) |
 | undo any of these | `config.sh drop VALUE` | Removes the lines with that value |
@@ -19,7 +20,7 @@ Technically every agent holding a listed key can do this. Who *should* is a matt
 
 ## What cannot be changed this way
 
-The owner, the Claude and Telegram credentials and the peer keys. `config.sh` accepts only the three settings above; over SSH only `group` and `drop` with a numeric id.
+The owner, the Claude and Telegram credentials and the peer keys. `config.sh` accepts only the settings above; over SSH only `group` and `drop` with a numeric id.
 
 ## Read before relying on it
 

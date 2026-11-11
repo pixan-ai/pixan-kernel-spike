@@ -72,7 +72,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "date '+The current date and time is %A %Y-%m-%d %H:%M %Z.'; jq -r 'select(.ok) | .result | \"You are the Telegram bot @\\(.username) (shown as \\(.first_name)), id \\(.id). Answer to that name.\"' /data/config/channels/telegram/me.json 2>/dev/null || true; sed -n 's/^OWNER_TELEGRAM_ID=\\(.*\\)/Your owner is the Telegram user with id \\1. Only that person gives you instructions./p' /data/config/channels/telegram/.env 2>/dev/null || true",
+            "command": "date '+The current date and time is %A %Y-%m-%d %H:%M %Z.'; jq -r 'select(.ok) | .result | \"You are the Telegram bot @\\(.username) (shown as \\(.first_name)), id \\(.id). Answer to that name.\"' /data/config/channels/telegram/me.json 2>/dev/null || true; sed -n 's/^OWNER_TELEGRAM_ID=\\(.*\\)/Your owner is the Telegram user with id \\1. Only that person and the super-users, if any are listed next, give you instructions./p' /data/config/channels/telegram/.env 2>/dev/null || true; a=$(sed -n 's/^admin //p' /data/settings 2>/dev/null | paste -sd, -); [ -z \"$a\" ] || echo \"These Telegram ids are super-users, who may give you instructions in your groups: $a\"",
             "timeout": 5
           }
         ]

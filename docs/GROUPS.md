@@ -25,7 +25,8 @@ Tell the agent in private: "join the group -1001234567890". It applies the chang
 
 ## Read before enabling
 
-- **Everyone in the group can talk to the agent**, so only add it to groups whose members you trust. What separates the owner from the rest is an instruction, not a lock: the agent is told its owner's id at every start and told that only the owner gives instructions (settings, jobs, commands, private information). A persistent member can try to talk it out of that. The hard limits of the policy (denied tools and paths) apply to everybody the same.
+- **Super-users.** Besides the owner, the people the owner names ("make 123456789 a super-user", `config.sh admin ID`) may give the agent instructions in its groups. They get no private chat with it, cannot name other super-users, and a fellow agent cannot name one over SSH. The owner is told of each change.
+- **Everyone in the group can talk to the agent**, so only add it to groups whose members you trust. What separates the owner from the rest is an instruction, not a lock: the agent is told its owner's id at every start and told that only the owner and the super-users give instructions (settings, jobs, commands, private information). A persistent member can try to talk it out of that. The hard limits of the policy (denied tools and paths) apply to everybody the same.
 - Everything written in the group enters the agent's session: more usage on the owner's Claude plan, in proportion to how busy the group is.
 - Other members read the bot's answers, so do not use a group with people who should not see them.
 - With several bots hearing each other, each one's messages enter the others' sessions: more usage, and a risk of bots answering each other in a loop. The instructions tell each agent to answer only when addressed and never to reply to a fellow bot's reply by default.

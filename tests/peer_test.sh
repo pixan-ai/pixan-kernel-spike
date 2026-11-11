@@ -47,6 +47,7 @@ check "a fellow agent that sets a group gets the confirmation back" sees "group 
 check "a fellow agent can add a group to this agent" test "$(jq -c '.groups | keys' /data/config/channels/telegram/access.json)" = '["-1005"]'
 check "...and this agent's owner is told who did it" grep -q "Setting changed by a fellow agent: group -1005" /data/curl-args
 check "...but only groups: a peer address is refused" refused "peer evil=attacker.example"
+check "...and a fellow agent cannot name a super-user" refused "admin 777"
 check "...and nothing can ride along with the id" refused "group -1005; cat /etc/passwd"
 check "...which leaves the settings as they were" test "$(cat /data/settings)" = "group -1005"
 install -o 1001 -g 1001 -m 600 "$K/stranger" /data/ssh/peer_key

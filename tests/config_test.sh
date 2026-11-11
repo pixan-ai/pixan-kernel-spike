@@ -21,6 +21,12 @@ check "group ID: the bot takes part in that group, without a mention" test "$(ac
 check "...and hears everyone there, people and bots" test "$(access '.groups["-1001"].allowFrom')" = '[]'
 check "...and the owner is told, in private" told "Setting changed: group -1001"
 check "...and whoever asked gets a confirmation with the resulting state" bash -c 'env PATH="$0:$PATH" "$1/config.sh" group -1002 | grep -q "ok: group -1002. Groups: \[\"-1001\",\"-1002\"\]"' "$STUBS" "$BIN"
+config admin 777
+check "admin ID: that person is recorded as a super-user" grep -qx "admin 777" /data/settings
+check "...and the owner is told" told "Setting changed: admin 777"
+check "...which opens no private chat: private stays owner-only" test "$(access '.allowFrom - ["-1001","-1002"]')" = '["42"]'
+config drop 777
+check "drop removes a super-user" bash -c '! grep -q 777 /data/settings'
 check "there is no per-sender list any more: sender is refused" bash -c '! env PATH="$0:$PATH" "$1/config.sh" sender 777 2>/dev/null' "$STUBS" "$BIN"
 check "...but private messages stay owner-only" test "$(access '.allowFrom - ["-1001","-1002"]')" = '["42"]'
 config group -1001
