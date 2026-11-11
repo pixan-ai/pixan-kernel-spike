@@ -2,13 +2,10 @@
 # shellcheck disable=SC2329,SC2016  # helpers are called through check "$@"; regexes are single-quoted on purpose
 # Supply-chain hygiene of the CI itself: what OpenSSF Scorecard and a reviewer look for in .github/workflows.
 set -uo pipefail
+# shellcheck source=tests/lib.sh
+. "$(dirname "$(readlink -f "$0")")/lib.sh"
 cd "$(dirname "$0")/.." || exit 1
-FAILS=0
 
-check() {  # check "description" command...
-  local d=$1; shift
-  if "$@"; then echo "ok   - $d"; else echo "FAIL - $d"; FAILS=$((FAILS + 1)); fi
-}
 absent() { ! grep -qE "$1" .github/workflows/*.yml; }
 
 # Every `uses:` is a local action or a full 40-character commit SHA (a tag can be moved; a SHA cannot).
@@ -30,5 +27,7 @@ pushes=$(grep -c 'push: true' .github/workflows/release.yml); based=$(grep -B1 '
 check "every image push in the release workflow builds the base target" test "$pushes" -gt 0 -a "$pushes" = "$based"
 check "the Dockerfile's default (last) target is the agent, built from base" test "$(grep -E '^FROM ' Dockerfile | tail -1 | grep -c 'FROM base AS agent$')" = 1
 check "Claude Code is installed only after the base target" test -z "$(sed '/^FROM base AS agent$/,$d' Dockerfile | grep -iE 'claude\.ai/install|claude plugin')"
+
+check "the container's PID 1 is tini, which forwards signals to the entrypoint" grep -qE '^ENTRYPOINT \["tini", "-g", "--", "/usr/local/bin/start.sh"\]$' Dockerfile
 
 echo "$FAILS failed"; exit $((FAILS > 0))

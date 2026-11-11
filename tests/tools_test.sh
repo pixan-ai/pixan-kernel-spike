@@ -3,16 +3,13 @@
 # Acceptance tests for the two diagnostic tools, bin/screen.sh and bin/denials.sh. They read fixed paths under /data
 # and the installed managed policy, so run as root inside the built image (or in a private mount namespace).
 set -uo pipefail
+# shellcheck source=tests/lib.sh
+. "$(dirname "$(readlink -f "$0")")/lib.sh"
 cd / || exit 1  # the tests empty /data, which can be the working directory of the container
 SCREEN=${SCREEN:-/usr/local/bin/screen.sh}
 DENIALS=${DENIALS:-/usr/local/bin/denials.sh}
 P=/data/config/projects/-data-workspace
-FAILS=0
 
-check() {  # check "description" command...
-  local d=$1; shift
-  if "$@"; then echo "ok   - $d"; else echo "FAIL - $d"; FAILS=$((FAILS + 1)); fi
-}
 has() { grep -qF -- "$2" <<<"$1"; }
 lacks() { ! grep -qF -- "$2" <<<"$1"; }
 reset() { mkdir -p /data; find /data -mindepth 1 -delete; }

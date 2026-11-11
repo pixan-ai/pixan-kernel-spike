@@ -3,12 +3,10 @@
 # Acceptance tests for scheduled jobs: bin/job.sh and bin/notify.sh with a stub `claude` and a stub `curl`.
 # BIN points at the scripts under test; CI runs this inside the built image.
 set -uo pipefail
+# shellcheck source=tests/lib.sh
+. "$(dirname "$(readlink -f "$0")")/lib.sh"
 cd / || exit 1
-BIN=${BIN:-/usr/local/bin}; STUBS=$(mktemp -d); FAILS=0
-check() {  # check "description" command...
-  local d=$1; shift
-  if "$@"; then echo "ok   - $d"; else echo "FAIL - $d"; FAILS=$((FAILS + 1)); fi
-}
+BIN=${BIN:-/usr/local/bin}; STUBS=$(mktemp -d)
 cat > "$STUBS/claude" <<'EOF'
 #!/usr/bin/env bash
 # Stub Claude: record where it keeps its config, then behave as CLAUDE_STUB says.

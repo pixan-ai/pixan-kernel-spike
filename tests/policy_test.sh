@@ -3,10 +3,12 @@
 # Acceptance tests for the managed policy as installed in the image (POLICY): the settings that keep the agent safe and
 # unattended, and the hooks it runs, executed against a stub curl with an empty environment. Run as root inside the image.
 set -uo pipefail
+# shellcheck source=tests/lib.sh
+. "$(dirname "$(readlink -f "$0")")/lib.sh"
 cd / || exit 1  # the tests empty /data, which can be the working directory of the container
 POLICY=${POLICY:-/etc/claude-code/managed-settings.json}
 CREDS=/data/config/channels/telegram/.env
-STUBS=$(mktemp -d); ARGS=$STUBS/curl.args; FAILS=0
+STUBS=$(mktemp -d); ARGS=$STUBS/curl.args
 chmod 755 "$STUBS"
 cat > "$STUBS/curl" <<EOF
 #!/usr/bin/env bash
@@ -14,10 +16,6 @@ printf '%s\n' "\$@" > "$ARGS"; cat > "$ARGS.stdin"
 EOF
 chmod 755 "$STUBS/curl"
 
-check() {  # check "description" command...
-  local d=$1; shift
-  if "$@"; then echo "ok   - $d"; else echo "FAIL - $d"; FAILS=$((FAILS + 1)); fi
-}
 setting() { jq -e "$1" "$POLICY" > /dev/null; }
 denies() { jq -e --arg r "$1" '.permissions.deny | index($r) != null' "$POLICY" > /dev/null; }
 parses() { printf '%s\n' "$1" | bash -n; }
