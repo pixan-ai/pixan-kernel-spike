@@ -39,6 +39,10 @@ check "a line that is not exactly a job.sh call never reaches supercronic" bash 
 bad_job() { ! config job "$@" && ! grep -q "$2" /data/cron/crontab; }
 check "a schedule that is not five cron fields is refused" bad_job "* * * * * touch" nope "x"
 check "a job name with anything but letters, digits, _ and - is refused" bad_job "0 8 * * *" 'a;b' "x"
+config group -1001; config job "0 9 * * *" bye "Say goodbye" -1001
+check "a job can deliver to a group this agent is in" test "$(cat /data/cron/prompts/bye.to)" = "-1001"
+check "...but not to any other chat" bad_job "0 9 * * *" spam "x" -999
+config drop bye
 config job "30 9 * * *" news "Other prompt"
 check "setting a job again replaces it" test "$(grep -c 'job.sh news$' $C)$(cat /data/cron/prompts/news)" = "1Other prompt"
 config drop news
