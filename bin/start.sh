@@ -18,8 +18,9 @@ cp -rn /opt/seed/config/. "$CFG"/
 # The plugin must run from the volume copy (the one the policy protects), and a new image must replace it:
 # its registry files carry the absolute build path, so copy it fresh at every start and point them at the volume.
 rm -rf "$CFG/plugins" && cp -r /opt/seed/config/plugins "$CFG/" && sed -i "s#/opt/seed/config#$CFG#g" "$CFG"/plugins/*.json
-# Only the owner can talk to the bot (first start only; afterwards the owner edits it on the volume).
-[ -f "$TG/access.json" ] || printf '{"dmPolicy":"allowlist","allowFrom":["%s"],"groups":{},"pending":{}}\n' "$OWNER_TELEGRAM_ID" > "$TG/access.json"
+# Who may talk to the bot, rebuilt from the variables at every start: the owner in private; in the listed groups, the owner and the listed senders, without having to mention the bot.
+jq -n --arg o "$OWNER_TELEGRAM_ID" --arg g "${TELEGRAM_GROUP_IDS:-}" --arg s "${TELEGRAM_GROUP_SENDERS:-}" '($g | split(" ") | map(select(. != ""))) as $gs | ([$o] + ($s | split(" ") | map(select(. != "")))) as $who
+  | {dmPolicy: "allowlist", allowFrom: ([$o] + $gs), groups: ($gs | map({key: ., value: {requireMention: false, allowFrom: $who}}) | from_entries), pending: {}}' > "$TG/access.json"
 # The plugin and the alert hook read the bot credentials from this file (ready for an env scrub on hosts that allow it).
 (umask 077; printf 'TELEGRAM_BOT_TOKEN=%s\nOWNER_TELEGRAM_ID=%s\n' "$TELEGRAM_BOT_TOKEN" "$OWNER_TELEGRAM_ID" > "$TG/.env")
 # A revoked or mistyped bot token would leave the bot mute with no error anywhere: ask Telegram once. Only a clear 401 stops the start; a network hiccup does not. The URL goes through stdin so the token is not in a process list.
