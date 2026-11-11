@@ -30,6 +30,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 
 ### Added
 
+- Unanswered-message alert: a message whose turn has not ended after ten minutes is reported to the owner, once.
 - docs/GETTING-STARTED.md: installation for a first-time user, and what to tell the agent afterwards.
 - Backup and restore: a nightly backup of memory, conversations, workspace, settings and jobs, encrypted with age inside the container and sent with rclone (Google Drive by default, Cloudflare R2 as an alternative); restore onto an empty volume by setting the private key. See docs/BACKUP.md.
 - Watchdog: when Claude runs but the Telegram plugin's process is gone (two checks, five minutes apart), the owner is told and Claude restarts with the conversation.

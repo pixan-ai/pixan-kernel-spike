@@ -94,7 +94,7 @@ bin/job.sh                    runs one scheduled prompt and delivers the answer 
 bin/config.sh                 settings the agent changes itself when the owner asks (see docs/SETTINGS.md)
 bin/peer.sh                   what fellow agents may do over SSH: look, and set groups (see docs/PEERS.md)
 bin/backup.sh                 nightly encrypted backup, and restore onto an empty volume (see docs/BACKUP.md)
-bin/watchdog.sh               tells the owner and restarts when Claude runs but the Telegram plugin is gone
+bin/watchdog.sh               tells the owner about a message left unanswered, and restarts when the Telegram plugin is gone
 bin/notify.sh                 one Telegram message to the owner
 bin/denials.sh                loaded policy + tool errors from the latest session
 policy/managed-settings.json  the managed policy and hooks
