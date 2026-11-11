@@ -63,6 +63,9 @@ A fixed-price server suits several agents better than per-minute billing, and a 
 | "Mándame cada día a las 8 un resumen de …" | It schedules a job; you get a notice | [CRON.md](CRON.md) |
 | "Únete al grupo -100…" | It starts listening in that group, no mention needed | [GROUPS.md](GROUPS.md) |
 | "Tu compañero X está en …" / "¿Qué está haciendo X?" | It remembers a fellow agent and can look at its screen | [PEERS.md](PEERS.md) |
+| "Recuerda que …" / "¿Qué recuerdas de …?" | It keeps it in its memory. Every night it consolidates the day and starts a clean conversation | [MEMORY.md](MEMORY.md) |
+| "Cada día a las 9 publica en el grupo -100… lo más relevante de ayer" | The daily council: every agent of a team reports in one group, and they read each other | [MEMORY.md](MEMORY.md#the-daily-council) |
+| "Haz super-usuario a 123456789" | That person can also give it instructions in its groups | [GROUPS.md](GROUPS.md) |
 | "Anota en tu CLAUDE.md que …" | Its own lasting instructions (name, role, tone) | |
 
 Every change it makes to its own settings is confirmed to you in private ([SETTINGS.md](SETTINGS.md)).

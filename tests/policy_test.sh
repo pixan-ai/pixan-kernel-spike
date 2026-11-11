@@ -65,6 +65,9 @@ echo "admin 777" > /data/settings
 check "...and who else may give instructions (the super-users)" says "These Telegram ids are super-users.*: 777"
 rm /data/settings
 check "...and says nothing about super-users when there are none" silent_about "These Telegram ids"
+mkdir -p /data/workspace; echo "- Ana prefers mornings" > /data/workspace/MEMORY.md
+check "...and what it kept from previous days (MEMORY.md), since the conversation is new" says "Ana prefers mornings"
+rm /data/workspace/MEMORY.md
 check "...without showing the bot token" silent_about "123:abc"
 
 # --- what the agent is shown with every message it receives: its own recent job deliveries

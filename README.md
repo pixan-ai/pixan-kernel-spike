@@ -93,6 +93,7 @@ bin/screen.sh                 readable view of the Claude screen log
 bin/job.sh                    runs one scheduled prompt and delivers the answer (see docs/CRON.md)
 bin/config.sh                 settings the agent changes itself when the owner asks (see docs/SETTINGS.md)
 bin/peer.sh                   what fellow agents may do over SSH: look, and set groups (see docs/PEERS.md)
+bin/dream.sh                  the daily dream: consolidate memory, then a clean conversation (see docs/MEMORY.md)
 bin/doorbell.sh               the opt-in sleep: wait for Telegram to announce a message (see docs/SLEEP.md)
 bin/doorbell.js               the listener Telegram calls while the agent sleeps
 bin/backup.sh                 nightly encrypted backup, and restore onto an empty volume (see docs/BACKUP.md)

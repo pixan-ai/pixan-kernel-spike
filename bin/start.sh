@@ -58,6 +58,7 @@ supercronic -quiet -inotify /data/cron/crontab &
 # Opt-in sleep (IDLE_SLEEP_MINUTES, docs/SLEEP.md): after that long without activity Claude is stopped and doorbell.sh waits for
 # Telegram to announce a message; then Claude starts again and continues the conversation. /data/idle marks "asleep".
 while :; do
+  dream.sh || true  # once a day: consolidate memory, then the next conversation starts clean (docs/MEMORY.md)
   T0=$SECONDS
   [ ! -e /data/idle ] || [ -z "${IDLE_SLEEP_MINUTES:-}" ] || doorbell.sh || sleep 30
   rm -f /data/idle

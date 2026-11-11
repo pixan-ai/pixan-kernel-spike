@@ -1,6 +1,6 @@
 # Jobs every agent runs, from the image (root-owned, replaced by every update). The agent's own jobs are added below
 # this by `config.sh apply`, which keeps only lines of the form: SCHEDULE job.sh NAME
-# Daily recycle in a quiet hour: the container restarts and Claude continues the conversation.
+# Daily recycle in a quiet hour: the container restarts, the agent dreams (dream.sh) and starts a clean conversation.
 0 4 * * * pkill -x script
 # Every five minutes: is the Telegram channel still there while Claude runs? (two sightings, then tell the owner and restart)
 */5 * * * * watchdog.sh
