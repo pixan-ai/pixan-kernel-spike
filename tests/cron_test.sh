@@ -10,8 +10,8 @@ BIN=${BIN:-/usr/local/bin}; STUBS=$(mktemp -d)
 cat > "$STUBS/claude" <<'EOF'
 #!/usr/bin/env bash
 # Stub Claude: record where it keeps its config, then behave as CLAUDE_STUB says.
-echo "$CLAUDE_CONFIG_DIR" > /data/claude-config-dir
-case "${CLAUDE_STUB:-ok}" in ok) echo "five AI headlines";; echo) echo "${@: -1}";; fail) echo "boom" >&2; exit 1;; hang) sleep 30;; esac
+echo "$CLAUDE_CONFIG_DIR" > /data/claude-config-dir; printf '%s' "${@: -1}" > /data/claude-prompt
+case "${CLAUDE_STUB:-ok}" in ok) echo "five AI headlines";; echo) echo "${@: -1}"; echo "noise on stderr" >&2;; fail) echo "boom" >&2; exit 1;; hang) sleep 30;; esac
 EOF
 cat > "$STUBS/curl" <<'EOF'
 #!/usr/bin/env bash
@@ -21,7 +21,7 @@ EOF
 chmod 755 "$STUBS"/*
 fresh() {
   mkdir -p /data/workspace /data/config/channels/telegram; find /data -mindepth 1 -delete
-  mkdir -p /data/workspace /data/config/channels/telegram
+  mkdir -p /data/workspace /data/config/channels/telegram /data/cron/prompts
   printf 'TELEGRAM_BOT_TOKEN=123:SECRET\nOWNER_TELEGRAM_ID=42\n' > /data/config/channels/telegram/.env
 }
 job() { env PATH="$STUBS:$BIN:$PATH" "$@" "$BIN/job.sh" news "Summarise the news" > /dev/null 2>&1; RC=$?; }
@@ -38,6 +38,14 @@ check "a job runs in its own config directory, never the bot's" test "$(cat /dat
 fresh; mkdir -p /data/cron/prompts; echo "PROMPT-FROM-FILE" > /data/cron/prompts/news
 env PATH="$STUBS:$BIN:$PATH" CLAUDE_STUB=echo "$BIN/job.sh" news > /dev/null 2>&1
 check "a job without a prompt on its line takes it from its file" grep -q "PROMPT-FROM-FILE" /data/workspace/sent.md
+check "what a job writes on stderr never reaches the owner" bash -c '! grep -q "noise on stderr" /data/curl-args /data/workspace/sent.md'
+
+fresh; mkdir -p /data/cron/prompts; printf '%s' "-1001" > /data/cron/prompts/news.to; job
+check "a job with a group as its destination delivers there" grep -q "chat_id=-1001" /data/curl-args
+check "the job's session is told to write the message, not to send it" grep -q "do not look for a tool to send it" /data/claude-prompt
+: > /data/curl-args; job CLAUDE_STUB=fail
+check "...but its failure goes to the owner, never to the group" bash -c 'grep -q "chat_id=42" /data/curl-args && ! grep -q "chat_id=-1001" /data/curl-args'
+check "...with the error, which never travels with a normal answer" grep -q "boom" /data/curl-args
 
 fresh; job CLAUDE_STUB=fail
 check "a failing job alerts the owner" sent_to_owner 'Scheduled job "news" failed'

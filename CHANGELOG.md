@@ -6,6 +6,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 
 ### Changed
 
+- Jobs can deliver to a group the agent is in (`config.sh job … GROUP_ID`); the job's session is told it only writes the message; a job's stderr no longer reaches Telegram except in its failure notice to the owner (seen on Railway: a job for a group ended as an error message in private).
 - `tini` is PID 1 (SIGTERM reaches the entrypoint); the bot token is removed from the environment before Claude and the scheduler start; a missing `TELEGRAM_BOT_TOKEN` or `OWNER_TELEGRAM_ID` fails at once; `mem_limit` in compose; the start log no longer prints a `whitespace:` field that could only say "no"; tests share `tests/lib.sh`.
 - **Security:** scheduled jobs can only be `job.sh NAME` (a prompt run inside Claude under the policy). The agent adds them with `config.sh job`, which tells the owner; any other line in the cron files never runs. The daily recycle moved to the image (`bin/system.cron`), so the agent cannot remove it and updates reach existing volumes.
 - `access.json` is replaced atomically.
