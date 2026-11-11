@@ -20,6 +20,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 
 ### Added
 
+- The agent knows its own Telegram bot name and id from the first message: the start-up check keeps Telegram's answer and the SessionStart hook states it (seen on Railway: an agent in a group did not know it was being addressed).
 - Settings by chat: the agent adds groups, senders and fellow agents itself (`config.sh`), applies them at once and tells the owner every time. A fellow agent can set another's groups over the peer channel. See docs/SETTINGS.md.
 - Peer view: `transcript` (the recent conversation of a fellow agent) and names from `PEERS` instead of addresses.
 - Telegram groups: `TELEGRAM_GROUP_IDS` and `TELEGRAM_GROUP_SENDERS`; no mention needed in a listed group. See docs/GROUPS.md.

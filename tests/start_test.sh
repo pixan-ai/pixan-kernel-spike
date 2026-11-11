@@ -25,7 +25,9 @@ chmod 755 "$STUBS/sleep"
 cat > "$STUBS/curl" <<'EOF'
 #!/usr/bin/env bash
 # Stub Telegram: answer getMe with the HTTP status in TG_STATUS (default 200); 000 = no network.
-printf '%s\n' "$*" >> /data/curl-calls 2>/dev/null; cat > /dev/null; printf '%s' "${TG_STATUS:-200}"; [ "${TG_STATUS:-200}" != 000 ] || exit 7
+printf '%s\n' "$*" >> /data/curl-calls 2>/dev/null; cat > /dev/null
+while [ $# -gt 1 ]; do [ "$1" != -o ] || [ "${TG_STATUS:-200}" != 200 ] || echo '{"ok":true,"result":{"id":555,"username":"Test_bot","first_name":"Test"}}' > "$2"; shift; done
+printf '%s' "${TG_STATUS:-200}"; [ "${TG_STATUS:-200}" != 000 ] || exit 7
 EOF
 printf '#!/usr/bin/env bash\necho "$*" > /data/supercronic-args\n' > "$STUBS/supercronic"; chmod 755 "$STUBS/supercronic"
 printf '#!/usr/bin/env bash\necho "$*" > /data/peer-args\n' > "$STUBS/peer.sh"; chmod 755 "$STUBS/peer.sh"
@@ -106,6 +108,8 @@ group() { jq -c "$1" /data/config/channels/telegram/access.json; }
 check "listed groups are open to the bot, without a mention" test "$(group '[.groups | keys[], (.[] | .requireMention)]')" = '["-1001","-1002",false,false]'
 check "...only for the owner and the listed senders, not for every member" test "$(group '.groups["-1001"].allowFrom')" = '["42","777"]'
 check "...and private messages stay owner-only" test "$(group '.allowFrom - ["-1001","-1002"]')" = '["42"]'
+
+check "the bot's own Telegram identity is kept for the session hook" test "$(jq -r .result.username /data/config/channels/telegram/me.json)" = Test_bot
 
 run ANTHROPIC_API_KEY=dummy-api-key-0123456789ABCDEFGHIJ
 check "API key switch: its last 20 chars are pre-approved" test "$(jq -c '.customApiKeyResponses.approved' /data/config/.claude.json)" = '["0123456789ABCDEFGHIJ"]'

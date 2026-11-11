@@ -50,6 +50,16 @@ for c in "${cmds[@]}"; do check "hook command parses: ${c:0:44}..." parses "$c";
 
 # --- the hooks, executed. Credentials come from the private file, never from the environment.
 mkdir -p "$(dirname "$CREDS")"
+says() { session_start | grep -q "$1"; }
+silent_about() { ! says "$1"; }
+session_start() { env -i PATH=/usr/bin:/bin sh -c "$(hook '.hooks.SessionStart[0].hooks[0].command')" 2>&1; }
+echo '{"ok":true,"result":{"id":555,"username":"Test_bot","first_name":"Test"}}' > "$(dirname "$CREDS")/me.json"
+check "SessionStart tells the agent the date" says "The current date and time is"
+check "...and its own Telegram bot name and id" says "You are the Telegram bot @Test_bot (shown as Test), id 555"
+echo '{"ok":false,"error_code":401}' > "$(dirname "$CREDS")/me.json"
+check "...and says nothing about a name it does not know" silent_about "Telegram bot"
+rm -f "$(dirname "$CREDS")/me.json"
+check "...and still works without that file" says "The current date"
 printf 'TELEGRAM_BOT_TOKEN=123:abc\nOWNER_TELEGRAM_ID=42\n' > "$CREDS"
 
 rm -f "$ARGS"
