@@ -5,7 +5,7 @@ FROM oven/bun:1-debian@sha256:93d5032fe06d163427822dc1598f420363759bb18155c9cc90
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 # Unpinned apt packages on purpose: pinned Debian versions vanish from the mirror; Dependabot bumps the base image.
 # hadolint ignore=DL3008
-RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates git jq procps openssh-server openssh-client tini \
+RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates git jq procps openssh-server openssh-client tini rclone age \
  && rm -rf /var/lib/apt/lists/* \
  && useradd -m -u 1001 agent && mkdir -p /data /opt/seed /run/sshd && chown agent:agent /data /opt/seed
 

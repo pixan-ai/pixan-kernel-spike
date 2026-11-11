@@ -30,6 +30,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 
 ### Added
 
+- Backup and restore: a nightly backup of memory, conversations, workspace, settings and jobs, encrypted with age inside the container and sent with rclone (Google Drive by default, Cloudflare R2 as an alternative); restore onto an empty volume by setting the private key. See docs/BACKUP.md.
 - Watchdog: when Claude runs but the Telegram plugin's process is gone (two checks, five minutes apart), the owner is told and Claude restarts with the conversation.
 - The agent knows its own Telegram bot name and id from the first message: the start-up check keeps Telegram's answer and the SessionStart hook states it (seen on Railway: an agent in a group did not know it was being addressed).
 - Settings by chat: the agent adds groups, senders and fellow agents itself (`config.sh`), applies them at once and tells the owner every time. A fellow agent can set another's groups over the peer channel. See docs/SETTINGS.md.

@@ -4,3 +4,5 @@
 0 4 * * * pkill -x script
 # Every five minutes: is the Telegram channel still there while Claude runs? (two sightings, then tell the owner and restart)
 */5 * * * * watchdog.sh
+# Nightly encrypted backup, before the recycle. Does nothing unless BACKUP_REMOTE is set.
+30 3 * * * backup.sh

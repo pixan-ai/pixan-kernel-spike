@@ -50,6 +50,8 @@ See [docs/DEPLOY-RAILWAY.md](docs/DEPLOY-RAILWAY.md). The Dockerfile deploys as 
 | `OWNER_TELEGRAM_ID` | yes | Only this user can talk to the bot (allowlist) |
 | `TELEGRAM_GROUP_IDS` | no | Telegram groups the bot may take part in (see [docs/GROUPS.md](docs/GROUPS.md)). Unset = private chat with the owner only |
 | `TELEGRAM_GROUP_SENDERS` | no | Extra user or bot ids the bot listens to in those groups, besides the owner |
+| `RCLONE_CONF` | no | Storage credentials for the nightly encrypted backup (see [docs/BACKUP.md](docs/BACKUP.md), which lists the other backup variables) |
+| `BACKUP_AGE_KEY` | no | Only to restore: the private key, on a new empty volume. Remove it afterwards |
 | `PEER_PUBLIC_KEYS` | no | Public SSH keys of fellow agents allowed to read this agent's screen (see [docs/PEERS.md](docs/PEERS.md)). Unset = no SSH server |
 | `PEER_SSH_KEY` | no | Private SSH key this agent uses to look at fellow agents |
 | `SCREEN_MIRROR` | no | Seconds between copies of the readable screen to the service log (e.g. `30`). Unset = off. The screen contains your conversation: enable only to debug |
@@ -89,6 +91,7 @@ bin/screen.sh                 readable view of the Claude screen log
 bin/job.sh                    runs one scheduled prompt and delivers the answer (see docs/CRON.md)
 bin/config.sh                 settings the agent changes itself when the owner asks (see docs/SETTINGS.md)
 bin/peer.sh                   what fellow agents may do over SSH: look, and set groups (see docs/PEERS.md)
+bin/backup.sh                 nightly encrypted backup, and restore onto an empty volume (see docs/BACKUP.md)
 bin/watchdog.sh               tells the owner and restarts when Claude runs but the Telegram plugin is gone
 bin/notify.sh                 one Telegram message to the owner
 bin/denials.sh                loaded policy + tool errors from the latest session
