@@ -6,6 +6,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 
 ### Changed
 
+- CI fails when the publishable base image has a fixable CRITICAL vulnerability (Trivy). The agent image, which adds Claude Code and the plugin, stays report-only.
 - The agent is shown its recent job deliveries with every message (a `UserPromptSubmit` hook over `sent.jsonl`), instead of being asked to read a file it could skip. `sent.md` is replaced by `sent.jsonl`, written one line at a time.
 - Jobs can deliver to a group the agent is in (`config.sh job … GROUP_ID`); the job's session is told it only writes the message; a job's stderr no longer reaches Telegram except in its failure notice to the owner (seen on Railway: a job for a group ended as an error message in private).
 - `tini` is PID 1 (SIGTERM reaches the entrypoint); the bot token is removed from the environment before Claude and the scheduler start; a missing `TELEGRAM_BOT_TOKEN` or `OWNER_TELEGRAM_ID` fails at once; `mem_limit` in compose; the start log no longer prints a `whitespace:` field that could only say "no"; tests share `tests/lib.sh`.
