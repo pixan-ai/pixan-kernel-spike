@@ -25,7 +25,7 @@ Tell the agent in private: "join the group -1001234567890". It applies the chang
 
 ## Read before enabling
 
-- **Super-users.** Besides the owner, the people the owner names ("make 123456789 a super-user", `config.sh admin ID`) may give the agent instructions in its groups. They get no private chat with it, cannot name other super-users, and a fellow agent cannot name one over SSH. The owner is told of each change.
+- **Super-users.** Besides the owner, super-users may give the agent instructions in its groups. The owner or any existing super-user can name another ("make 123456789 a super-user", `config.sh admin ID`), and can ask an agent to name one on a fellow agent ([PEERS.md](PEERS.md)), so a team does not depend on one person. They get no private chat with the agent. The owner is told of each change. Trust is transitive: whoever you name can name others.
 - **Everyone in the group can talk to the agent**, so only add it to groups whose members you trust. What separates the owner from the rest is an instruction, not a lock: the agent is told its owner's id at every start and told that only the owner and the super-users give instructions (settings, jobs, commands, private information). A persistent member can try to talk it out of that. The hard limits of the policy (denied tools and paths) apply to everybody the same.
 - Everything written in the group enters the agent's session: more usage on the owner's Claude plan, in proportion to how busy the group is.
 - Other members read the bot's answers, so do not use a group with people who should not see them.
