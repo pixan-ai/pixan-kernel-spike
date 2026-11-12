@@ -17,5 +17,6 @@ jq -r 'select(.type == "user" or .type == "assistant") | .type as $t
   timeout "${JOB_TIMEOUT:-900}" claude -p --permission-mode auto "You are consolidating this agent's memory at the end of its day. Standard input is its conversation since the last time. Tomorrow it starts a new conversation and will know only what is in $W/MEMORY.md, so:
 1. Rewrite $W/MEMORY.md: merge today into what is there. Keep what a colleague taking over tomorrow needs: who is who and how they like things, decisions, commitments and open tasks with their dates, lessons learned. Drop what is done or obsolete. At most 150 lines. Never credentials.
 2. Write $W/memory/$(date +%F).md: a short account of today (what was asked, what was done, what is pending).
-Answer with one line." > /dev/null 2> /data/cron/dream.err || exit 0   # a failed dream changes nothing: the conversation continues
-touch $L /data/fresh
+Answer with one line." > /dev/null 2> /data/cron/dream.err ||
+  { echo "dream: failed, the conversation continues: $(tail -c 300 /data/cron/dream.err)" >&2; exit 0; }  # a failed dream changes nothing
+touch $L /data/fresh; echo "dream: memory consolidated, starting a clean conversation" >&2

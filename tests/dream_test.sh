@@ -20,7 +20,7 @@ fresh() {
   echo '{"type":"user","message":{"content":"Call Ana on Monday"}}
 {"type":"assistant","message":{"content":[{"type":"tool_use","input":{"text":"Noted, Monday"}},{"type":"tool_result","content":"TOOL-OUTPUT"}]}}' > "$P/s1.jsonl"
 }
-dream() { env PATH="$STUBS:$BIN:$PATH" "$@" "$BIN/dream.sh" > /dev/null 2>&1; RC=$?; }
+dream() { env PATH="$STUBS:$BIN:$PATH" "$@" "$BIN/dream.sh" > /dev/null 2> /data/dream-log; RC=$?; }
 rc() { test "$RC" = "$1"; }
 absent() { test ! -e "$1"; }
 gave() { grep -q "$1" /data/claude-stdin; }
@@ -34,6 +34,7 @@ check "...and is told to keep the memory file" grep -q "/data/workspace/MEMORY.m
 check "...in its own config directory, not the bot's (a second Telegram plugin would silence the bot)" test "$(cat /data/claude-config-dir)" = /data/cron/config
 check "after a dream the next conversation starts clean" test -e /data/fresh
 check "...and the dream is remembered" test -e /data/cron/last-dream
+check "...and the start log says so" grep -q "dream: memory consolidated" /data/dream-log
 
 rm -f /data/fresh /data/claude-stdin; dream
 check "no second dream the same day: nothing runs" absent /data/claude-stdin
@@ -47,6 +48,7 @@ check "a day later with a conversation: it dreams again" gave "Call Ana"
 fresh; dream CLAUDE_STUB=fail
 check "a failed dream does not wipe the conversation: it continues" absent /data/fresh
 check "...and is tried again at the next start" absent /data/cron/last-dream
+check "...and the start log says why" grep -q "dream: failed.*boom" /data/dream-log
 check "...without stopping the agent from starting" rc 0
 
 fresh; rm "$P/s1.jsonl"; dream
