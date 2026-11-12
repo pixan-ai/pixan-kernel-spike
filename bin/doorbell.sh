@@ -12,7 +12,9 @@ url=${DOORBELL_URL:-https://${RAILWAY_PUBLIC_DOMAIN:?set DOORBELL_URL: sleeping 
 [ -s $S ] || (umask 077; head -c 32 /dev/urandom | base64 | tr -dc 'A-Za-z0-9' > $S)
 # A suspended container runs no nightly backup: make one now if the last is older than 20 hours.
 [ -n "$(find /data/cron/last-backup -mmin -1200 2> /dev/null)" ] || "$B/backup.sh" || true
-api setWebhook --data-urlencode "url=$url/doorbell" -d "secret_token=$(cat $S)" -o /dev/null
+# Without a webhook nothing would ever wake this agent: stay awake instead (start.sh starts Claude when this fails).
+api setWebhook --data-urlencode "url=$url/doorbell" -d "secret_token=$(cat $S)" | jq -e .ok > /dev/null ||
+  { echo "$(date '+%F %T') not sleeping: Telegram did not accept the webhook $url/doorbell" >&2; exit 1; }
 echo "$(date '+%F %T') asleep: waiting for the doorbell" >&2
 # Scheduled jobs need the container: with jobs, one packet every four minutes keeps the host from suspending it (Claude still sleeps).
 K=; [ ! -s /data/cron/jobs ] || { (while sleep 240; do curl -s -m 5 -o /dev/null https://api.telegram.org || true; done) & K=$!; }

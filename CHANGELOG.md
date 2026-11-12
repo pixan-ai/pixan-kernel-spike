@@ -58,6 +58,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 - The Telegram reply tool is pre-approved, so nothing reviewed the files it attaches, and its `files` parameter takes any path. A `PreToolUse` hook now refuses attachments from outside `/data/workspace`, `/tmp` and the Telegram inbox (keys, credentials, conversations), also through `..` or a link.
 - A job kept posting to a group after `config.sh drop GROUP`, and delivered to whatever its `.to` file said. `job.sh` now checks at delivery time that the destination is a group the agent is in; otherwise the owner gets it.
 - The dream reads text that any member of a group may have written, and ran with every tool. It now has only `Read`, `Edit` and `Write`: no shell, no network.
+- An agent went to sleep even when Telegram refused the webhook, and then never heard a message. It now stays awake and says so in the log.
 - The entrypoint now exits with status 1 and says so when Claude exits (it used to exit with 141).
 - The entrypoint fails fast, naming the missing variable, when no Claude credential is set.
 - A token copied from a phone with line breaks is cleaned before use.
