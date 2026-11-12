@@ -40,6 +40,10 @@ for f in README.md CONTRIBUTING.md SECURITY.md docs/*.md; do
     [ -e "$(dirname "$f")/$t" ] || broken="$broken $f->$t"
   done < <(grep -oE '\]\([^)]+\)' "$f")
 done
+# The guide is where an owner looks: everything the scripts let the host set must be explained there.
+for v in $(grep -ohE '\$\{[A-Z][A-Z0-9_]+:[-?+]' bin/* compose.yml | tr -d '${:?+-' | sort -u | grep -vE '^SSH_(CONNECTION|ORIGINAL_COMMAND)$') PORT BACKUP_AGE_RECIPIENT; do
+  check "the guide explains $v" grep -q "\`$v\`" docs/GETTING-STARTED.md
+done
 check "relative links in the documents resolve" test -z "$broken"
 [ -z "$broken" ] || echo "     broken:$broken"
 
