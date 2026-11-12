@@ -134,16 +134,34 @@ Applied at once, kept on the volume, and confirmed to the owner in private. The 
 
 "¿Qué ajustes tienes?" lists them ([SETTINGS.md](SETTINGS.md)).
 
-## Self-improvement: installing skills and tools (decided, not built yet)
+## Self-improvement: installing skills and tools
 
-As of 2026-11-12 these rules are decided; the mechanism is not in the image yet.
+Decided on 2026-11-12, built with a lock in `bin/install-lock.sh`. Not yet tried on a live agent.
 
-- Only a super-user can ask the agent to install a new skill or tool (for example "baja elevenlabs" or "learn to make a PowerPoint"). The owner is one more super-user. Anyone else who asks is refused.
-- When a super-user asks, it runs at once. There is no owner approval step. The owner gets a private Telegram notice afterwards, the same as for settings ([SETTINGS.md](SETTINGS.md)).
-- An install applies only to that agent. A super-user can explicitly ask to replicate it to several agents.
-- Python 3 will be added to the kernel image (it is not there today; the base is oven/bun Debian, which already has Bun for JavaScript and TypeScript). Still under evaluation, not decided: `python3-venv`/`uv`, `ffmpeg`, `poppler-utils`, `pandoc`.
+**Who.** Only the owner or a super-user ([SETTINGS.md](SETTINGS.md)) can make the agent install something. The owner counts as one more super-user. Anyone else who asks is refused by a hook, not only by the agent's judgment.
 
-How it is planned to work: skills live on the volume (`/data`); Python and Node packages go in `/data/tools`, static binaries in `/data/bin`; system packages (`apt`) only arrive through a pull request to the image. Enforcement is a lock, not an instruction: a `UserPromptSubmit` hook checks the sender against the super-users and opens a per-turn permission; a `PreToolUse` hook blocks `pip`/`npm`/`uv` installs and writes to `/data/bin` and the skills folder unless that permission is open. Every install is recorded in `/data/tools.json` (what, who asked, when, which agents) and `start.sh` reinstalls from it. API keys (for example ElevenLabs) never go through chat; the admin sets them as host variables.
+**How to ask.** Write to the agent on Telegram, in private or in a group it is in:
+
+| Say | It runs | Lands in |
+|---|---|---|
+| "baja elevenlabs" / "instala python-pptx" | `uv pip install elevenlabs` | `/data/tools/venv` (run with `/data/tools/venv/bin/python`) |
+| "instala la herramienta ruff" | `uv tool install ruff` | `/data/bin`, on the agent's `PATH` |
+| "aprende a hacer un PowerPoint" | writes a skill | `/data/workspace/.claude/skills/` |
+| "instala ffmpeg" | `uv pip install imageio-ffmpeg==0.8.1`, then a link to its `ffmpeg` in `/data/bin` | `/data/tools/venv`, `/data/bin/ffmpeg` (about 165 MB on the volume) |
+
+It runs at once, with no approval step. You do not need to know the tool's name: when a task needs one the agent lacks ("transcribe esta nota de voz", "¿qué se ve en este video?"), it says which tool and why. If you are a super-user, it installs it then and there. If you are not, it says that a super-user can ask for it. It never installs system packages (`apt`); those need a pull request to the image.
+
+`ffmpeg` is not in the image because it would add about 450 MB to every agent. The recipe above uses the static build that the `imageio-ffmpeg` package carries (FFmpeg 9.0.2 in 0.8.1, pinned by version), with no root and no system libraries. It handles voice notes (Opus) and video frames.
+
+**What the owner sees.** A private Telegram message after every install: "🧰 Installed at the request of NAME: COMMAND". Every install is also a line in `/data/tools.json` (when, who by name and id, the tool, the command). Ask "¿qué tienes instalado?" to see the list.
+
+**Only that agent.** An install applies to the agent that ran it. To have it on other agents, the super-user asks each of them; there is no fleet-wide install.
+
+**After a restart or a new image.** Everything lives on the volume, so it stays. At every start, `start.sh` makes the Python environment if it is missing and reinstalls the recorded `uv pip install`, `uv tool install` and `bun add -g` lines. A line that fails is logged and the start goes on. Other kinds of commands are never replayed.
+
+**API keys never go through chat.** If a tool needs one (ElevenLabs does), the owner sets it as a host variable.
+
+**What it is.** A guardrail against being talked into installing, not a sandbox. Its limits are in [THREAT-MODEL.md](THREAT-MODEL.md). System packages (`apt`) still only arrive through a pull request to the image ([What the image contains](#what-the-image-contains)).
 
 ### Files on the volume
 
