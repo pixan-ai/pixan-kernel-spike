@@ -24,6 +24,7 @@ cat > "$STUBS/curl" <<'EOF'
 #!/usr/bin/env bash
 # Stub Telegram Bot API. The method is the last path element of the URL given on stdin.
 m=$(sed -n 's/.*\/\([A-Za-z]*\)"$/\1/p'); echo "$m $*" >> /data/api-calls
+[ "$m" != setWebhook ] || { [ -e /data/webhook-refused ] && printf '{"ok":false,"description":"bad webhook: HTTPS url must be provided"}' || printf '{"ok":true}'; }
 [ "$m" != getWebhookInfo ] || printf '{"ok":true,"result":{"pending_update_count":%s}}' "$(cat /data/pending-count)"
 EOF
 printf '#!/usr/bin/env bash\necho ring >> /data/bun-runs; echo 1 > /data/pending-count\n' > "$STUBS/bun"
@@ -49,6 +50,11 @@ fresh 1; touch /data/cron/last-backup; asleep DOORBELL_URL=https://agent.example
 check "a message already waiting (it arrived while going to sleep, or the host woke the container) -> no waiting" test ! -e /data/bun-runs
 check "...and the webhook is removed" grep -q "^deleteWebhook" /data/api-calls
 check "no backup when a recent one exists" test ! -e /data/backup-runs
+
+fresh 0; touch /data/webhook-refused /data/cron/last-backup
+deaf() { ! asleep DOORBELL_URL=https://agent.example; }
+check "Telegram refuses the webhook -> it does not go to sleep (it would never hear a message)" deaf
+check "...and never waits for a ring" test ! -e /data/bun-runs
 
 fresh 0
 no_address() { ! env PATH="$STUBS:$PATH" "$STUBS/doorbell.sh" > /dev/null 2> /data/err && grep -q DOORBELL_URL /data/err && test ! -e /data/api-calls; }

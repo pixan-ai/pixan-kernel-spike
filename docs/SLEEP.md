@@ -33,6 +33,7 @@ On Railway: generate a public domain for the service with target port 8080, and 
 
 ## What changes when an agent sleeps
 
+- **If Telegram refuses the webhook** (wrong address, no HTTPS), the agent does not sleep: the log says `not sleeping: Telegram did not accept the webhook`. It keeps working, always on.
 - **Scheduled jobs.** A suspended container runs nothing. If the agent has jobs, the doorbell sends one packet every four minutes so the host keeps the container (Claude still sleeps: about a third of the memory). An agent without jobs is suspended completely.
 - **Nightly backup.** It would not run in a suspended container, so a backup is made when going to sleep if the last one is older than 20 hours.
 - **The first answer** after a sleep takes a few seconds longer.
