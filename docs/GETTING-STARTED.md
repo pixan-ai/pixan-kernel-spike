@@ -36,7 +36,9 @@ Copy the value with a copy button, not by selecting text: a truncated token give
 
 5. Press **Deploy** (variables stay pending until you do).
 
-Details and notes: [DEPLOY-RAILWAY.md](DEPLOY-RAILWAY.md). Cost: an agent that is always on uses about 0.3 to 0.7 GB of memory, billed by the minute. To pay only while it works, see [SLEEP.md](SLEEP.md).
+Details and notes: [DEPLOY-RAILWAY.md](DEPLOY-RAILWAY.md). Cost: an agent that is always on uses about 0.3 to 0.7 GB of memory, billed by the minute. 
+
+**Optional: sleep when idle.** Off by default: the agent is always on. To pay only while it works, add the variable `IDLE_SLEEP_MINUTES` (for example `10`) and give the service a public address; the agent then stops after that many quiet minutes and wakes on the next message, a few seconds later. Remove the variable to go back to always on. Steps and limits: [SLEEP.md](SLEEP.md).
 
 ### Your own server or computer (Docker)
 
@@ -75,7 +77,7 @@ Every change it makes to its own settings is confirmed to you in private ([SETTI
 
 - **Every night at 4:00** the agent restarts, consolidates the day into its memory and begins a new conversation. It is away for a minute or two. The next day it knows what it kept, not the literal wording of yesterday.
 - **Every change to its settings** (a group, a super-user, a job, a fellow agent) reaches you as a private notice, whoever asked for it.
-- **If you turned on sleep** ([SLEEP.md](SLEEP.md)), the first message after a quiet period takes a few seconds longer.
+- **If you turned on the optional sleep** ([SLEEP.md](SLEEP.md)), the first message after a quiet period takes a few seconds longer.
 - **In groups** it answers when addressed or when a message is for everyone, and stays silent otherwise. Only you and the super-users give it instructions there.
 
 ## 7. Before you rely on it
