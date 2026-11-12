@@ -57,7 +57,7 @@ jobs:
           docker run --rm --entrypoint sh pixan-kernel-spike:ci -ec 'test "$(id -u)" = 1001
             claude --version; bun --version; jq --version; curl --version; age --version; rclone version
             supercronic -version; ssh -V; script --version; realpath --version; tini --version
-            python3 --version; uv --version; uvx --version; ffmpeg -version; pdftotext -v; pandoc --version; unzip -v
+            python3 --version; uv --version; uvx --version; pdftotext -v; pandoc --version; unzip -v
             test -e /usr/share/zoneinfo/America/Mexico_City; UV_PYTHON_DOWNLOADS=never uv venv -q /tmp/venv' > /dev/null
       # The gate: what this project publishes (the base target, no Anthropic software) must have no fixable CRITICAL vulnerability.
       - name: Build the publishable base target

@@ -162,13 +162,14 @@ Every agent gets these, ready for its skills (decided 2026-11-12):
 |---|---|---|
 | Python 3 (`python3`) | Python Software Foundation | Most skills: PowerPoint, Excel, PDFs, charts, ElevenLabs and other APIs |
 | `uv`, `uvx` | Astral | Installing Python packages and tools, fast and isolated (pinned by version and checksum) |
-| `ffmpeg` | FFmpeg project | Voice notes, audio, and frames from a video, so the agent can "see" one |
 | `pdftotext` and the rest of `poppler-utils` | Poppler (freedesktop.org) | Reading PDFs |
 | `pandoc` | John MacFarlane and contributors | Converting between Word, Markdown, HTML and PDF |
 | `unzip` | Info-ZIP | Opening zip files and skill packages |
 | Time zones (`tzdata`) | IANA | Jobs and logs in the `TZ` you set; already in the Debian base |
 
-Also there: Bun (JavaScript and TypeScript), `git`, `jq`, `curl`, `rclone`, `age`, `supercronic`; Claude Code only in the agent image, never in the published `base` ([PRODUCT-IMAGE.md](PRODUCT-IMAGE.md)). Python packages (for example `python-pptx`) are not in the image: they are installed per agent. These tools add about 750 MB to the image, most of it `ffmpeg`'s libraries and `pandoc`.
+Also there: Bun (JavaScript and TypeScript), `git`, `jq`, `curl`, `rclone`, `age`, `supercronic`; Claude Code only in the agent image, never in the published `base` ([PRODUCT-IMAGE.md](PRODUCT-IMAGE.md)). Python packages (for example `python-pptx`) are not in the image: they are installed per agent. These tools add about 300 MB to the image, most of it `pandoc`.
+
+Not in the image on purpose: `ffmpeg` (voice notes, audio, video frames). With its libraries it would add about 450 MB to every agent. An agent that needs it installs it on a super-user's request, without root (see the self-improvement section).
 
 ## If something is wrong
 

@@ -4,11 +4,11 @@
 FROM oven/bun:1-debian@sha256:93d5032fe06d163427822dc1598f420363759bb18155c9cc90eb1be05a64a19e AS base
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 # Unpinned apt packages on purpose: pinned Debian versions vanish from the mirror; Dependabot bumps the base image.
-# Second line: tools for skills (python3: documents and APIs; ffmpeg: audio and video frames; poppler-utils: PDFs; pandoc: Word and
-# Markdown; unzip: archives). tzdata is already in the base image.
+# Second line: tools for skills (python3: documents and APIs; poppler-utils: PDFs; pandoc: Word and Markdown; unzip: archives).
+# tzdata is already in the base image. No ffmpeg: about 450 MB; an agent that needs it installs it (docs/GETTING-STARTED.md).
 # hadolint ignore=DL3008
 RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates git jq procps openssh-server openssh-client tini rclone age \
-    python3 ffmpeg poppler-utils pandoc unzip \
+    python3 poppler-utils pandoc unzip \
  && rm -rf /var/lib/apt/lists/* \
  && useradd -m -u 1001 agent && mkdir -p /data /opt/seed /run/sshd && chown agent:agent /data /opt/seed
 

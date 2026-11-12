@@ -54,7 +54,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 - Acceptance tests for the entrypoint, the diagnostic tools, the policy and the documentation, run in CI inside the built image.
 - Documentation: findings, architecture, Railway deployment, threat model, secrets, repository settings.
 - Supply chain: every action pinned to a commit SHA (and a test that keeps it so), CodeQL for the workflows, OpenSSF Scorecard, a report-only Trivy scan, and a release workflow that publishes with an SBOM, SLSA provenance, a keyless cosign signature and a GitHub attestation. See [docs/RELEASING.md](docs/RELEASING.md).
-- Image: tools for skills in the `base` target: Python 3, `uv`/`uvx` (Astral, pinned by version and checksum), `ffmpeg`, `poppler-utils`, `pandoc`, `unzip` (`tzdata` was already there). CI runs each one as the agent's user. About 750 MB more. See [docs/GETTING-STARTED.md](docs/GETTING-STARTED.md#what-the-image-contains).
+- Image: tools for skills in the `base` target: Python 3, `uv`/`uvx` (Astral, pinned by version and checksum), `poppler-utils`, `pandoc`, `unzip` (`tzdata` was already there). CI runs each one as the agent's user. About 300 MB more. `ffmpeg` is left out (about 450 MB more); agents install it when needed. See [docs/GETTING-STARTED.md](docs/GETTING-STARTED.md#what-the-image-contains).
 
 ### Fixed
 
