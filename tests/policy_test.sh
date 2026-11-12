@@ -41,7 +41,7 @@ for rule in 'Read(**/.env)' 'Read(**/.env.*)' 'Edit(//etc/claude-code/**)' 'Edit
 done
 check "auto mode keeps the built-in rules and forbids leaking credentials" \
   setting '.autoMode.hard_deny | (index("$defaults") != null) and (map(test("credential"; "i")) | any)'
-for event in SessionStart UserPromptSubmit Stop PostToolUse PostToolUseFailure PermissionDenied StopFailure Notification; do
+for event in PreToolUse SessionStart UserPromptSubmit Stop PostToolUse PostToolUseFailure PermissionDenied StopFailure Notification; do
   check "policy has a $event hook" setting ".hooks.$event | length > 0"
 done
 mapfile -t cmds < <(jq -r '.hooks[][].hooks[].command' "$POLICY")
@@ -124,4 +124,17 @@ check "Notification alerts only on permission prompts" test "$(hook '.hooks.Noti
 
 rm -f "$CREDS" /data/audit.jsonl "$ARGS" "$STUBS/curl"
 rmdir "$STUBS" 2> /dev/null
+# --- the reply tool is pre-approved (no classifier, no delay), so a hook decides which files it may attach.
+R='.hooks.PreToolUse[] | select(.matcher == "mcp__plugin_telegram_telegram__reply") | .hooks[0].command'
+attach() { run_hook "$R" "{\"tool_input\":{\"text\":\"hi\",\"files\":[\"$1\"]}}"; }
+refuses() { ! attach "$1"; }
+mkdir -p /data/workspace /data/ssh; ln -sfn /data/ssh/peer_key /data/workspace/innocent.txt
+check "a reply without attachments goes through" run_hook "$R" '{"tool_input":{"text":"hi"}}'
+check "a reply may attach a file from the workspace" attach /data/workspace/report.pdf
+check "...or a temporary file" attach /tmp/chart.png
+check "...or a photo it received" attach /data/config/channels/telegram/inbox/photo.jpg
+check "a reply may not attach a key" refuses /data/ssh/peer_key
+check "...nor the conversation, the credentials or the policy" refuses /data/config/.credentials.json
+check "...nor reach them by climbing out of the workspace" refuses /data/workspace/../ssh/rclone.conf
+check "...nor through a link placed in the workspace" refuses /data/workspace/innocent.txt
 echo "$FAILS failed"; exit $((FAILS > 0))

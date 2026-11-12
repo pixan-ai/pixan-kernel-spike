@@ -55,6 +55,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 
 ### Fixed
 
+- The Telegram reply tool is pre-approved, so nothing reviewed the files it attaches, and its `files` parameter takes any path. A `PreToolUse` hook now refuses attachments from outside `/data/workspace`, `/tmp` and the Telegram inbox (keys, credentials, conversations), also through `..` or a link.
 - The entrypoint now exits with status 1 and says so when Claude exits (it used to exit with 141).
 - The entrypoint fails fast, naming the missing variable, when no Claude credential is set.
 - A token copied from a phone with line breaks is cleaned before use.
