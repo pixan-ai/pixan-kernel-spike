@@ -55,6 +55,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 
 ### Fixed
 
+- A `MEMORY.md` longer than what is shown at session start was cut in silence. The agent is now told it is missing the end and must shorten it; the dream keeps the index under 150 lines and 15000 characters.
 - The Telegram reply tool is pre-approved, so nothing reviewed the files it attaches, and its `files` parameter takes any path. A `PreToolUse` hook now refuses attachments from outside `/data/workspace`, `/tmp` and the Telegram inbox (keys, credentials, conversations), also through `..` or a link.
 - A job kept posting to a group after `config.sh drop GROUP`, and delivered to whatever its `.to` file said. `job.sh` now checks at delivery time that the destination is a group the agent is in; otherwise the owner gets it.
 - The dream reads text that any member of a group may have written, and ran with every tool. It now has only `Read`, `Edit` and `Write`: no shell, no network.

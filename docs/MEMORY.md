@@ -21,6 +21,7 @@ An agent that sleeps when idle ([SLEEP.md](SLEEP.md)) dreams when it goes to sle
 
 - The dream is a summary made by a model: it can leave out something you cared about. Check `MEMORY.md` now and then, or ask the agent "what do you remember about …".
 - If the dream fails (no quota, timeout), nothing is lost: the conversation simply continues and the dream is tried again at the next start. The error is in `/data/cron/dream.err`.
+- **A memory that outgrows what is shown.** Seen after months with earlier agents: the index passed the size that is loaded, the end was cut in silence and the agent lost entries without knowing. Here the dream rewrites the index every night to at most 150 lines, and if the file is ever over 20000 characters the agent is told at the start of the session that it is missing the end and must shorten it.
 - The dream uses the owner's Claude plan: one short run a day.
 - The agent is unavailable for a minute or two while it dreams.
 - `MEMORY.md` is in the backup ([BACKUP.md](BACKUP.md)) with the rest of the workspace.

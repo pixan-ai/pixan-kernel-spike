@@ -49,7 +49,7 @@ for c in "${cmds[@]}"; do check "hook command parses: ${c:0:44}..." parses "$c";
 
 # --- the hooks, executed. Credentials come from the private file, never from the environment.
 mkdir -p "$(dirname "$CREDS")"
-says() { session_start | grep -q "$1"; }
+says() { session_start | grep "$1" > /dev/null; }  # not grep -q: it stops reading at the first match and the hook dies of SIGPIPE
 silent_about() { ! says "$1"; }
 session_start() { env -i PATH=/usr/bin:/bin sh -c "$(hook '.hooks.SessionStart[0].hooks[0].command')" 2>&1; }
 echo '{"ok":true,"result":{"id":555,"username":"Test_bot","first_name":"Test"}}' > "$(dirname "$CREDS")/me.json"
@@ -67,6 +67,9 @@ rm /data/settings
 check "...and says nothing about super-users when there are none" silent_about "These Telegram ids"
 mkdir -p /data/workspace; echo "- Ana prefers mornings" > /data/workspace/MEMORY.md
 check "...and what it kept from previous days (MEMORY.md), since the conversation is new" says "Ana prefers mornings"
+{ echo "- first line"; head -c 30000 /dev/zero | tr '\0' x; echo; echo "- LAST-LINE"; } > /data/workspace/MEMORY.md
+check "a memory file that outgrew what is shown is not cut in silence: the agent is told what it is missing" says "MEMORY.md is too long"
+check "...and still sees the beginning" says "first line"
 rm /data/workspace/MEMORY.md
 check "...without showing the bot token" silent_about "123:abc"
 

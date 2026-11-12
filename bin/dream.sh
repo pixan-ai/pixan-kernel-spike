@@ -16,7 +16,7 @@ jq -r 'select(.type == "user" or .type == "assistant") | .type as $t
   | (.message.content | if type == "string" then . else map(if .type == "text" then .text elif .type == "tool_use" then (.input.text // empty) else empty end) | join("\n") end)
   | select(length > 0) | "[\($t)] \(.[0:2000])"' "$f" | tail -c 300000 |
   timeout "${JOB_TIMEOUT:-900}" claude -p --permission-mode auto "You are consolidating this agent's memory at the end of its day. Standard input is its conversation since the last time. Tomorrow it starts a new conversation and will know only what is in $W/MEMORY.md, so:
-1. Rewrite $W/MEMORY.md: merge today into what is there. Keep what a colleague taking over tomorrow needs: who is who and how they like things, decisions, commitments and open tasks with their dates, lessons learned. Drop what is done or obsolete. At most 150 lines. Never credentials.
+1. Rewrite $W/MEMORY.md: merge today into what is there. Keep what a colleague taking over tomorrow needs: who is who and how they like things, decisions, commitments and open tasks with their dates, lessons learned. Drop what is done or obsolete. At most 150 lines and 15000 characters: what does not fit is not shown to the agent. Never credentials.
 2. Write $W/memory/$(date +%F).md: a short account of today (what was asked, what was done, what is pending).
 Answer with one line." --tools "Read,Edit,Write" > /dev/null 2> /data/cron/dream.err ||
   { echo "dream: failed, the conversation continues: $(tail -c 300 /data/cron/dream.err)" >&2; exit 0; }  # a failed dream changes nothing
