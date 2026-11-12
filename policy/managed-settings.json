@@ -40,6 +40,18 @@
     ]
   },
   "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "mcp__plugin_telegram_telegram__reply",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.files[]?' | while IFS= read -r f; do case \"$(realpath -m -- \"$f\")\" in /data/workspace/*|/tmp/*|/data/config/channels/telegram/inbox/*) ;; *) echo \"Attachments may only come from /data/workspace, /tmp or the Telegram inbox: $f\" >&2; exit 2 ;; esac; done",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
     "Stop": [
       {
         "hooks": [
