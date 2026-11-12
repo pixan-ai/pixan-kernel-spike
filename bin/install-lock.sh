@@ -42,6 +42,7 @@ case "${1:-}" in
       '{at: (now | todate), by: $o[0].user, by_id: $o[0].id, tool: $t, command: $c}' >> "$LOG"
     "$B/notify.sh" "🧰 Installed at the request of $(jq -r .user "$OK"): $(field '.tool_input.command // .tool_input.file_path' | head -c 300)" || true ;;
   replay)
+    mkdir -p /data/bin /data/tools
     ! command -v uv > /dev/null || [ -x /data/tools/venv/bin/python ] || uv venv -q --python /usr/bin/python3 /data/tools/venv || echo "install-lock: no Python environment (not fatal)" >&2
     [ -s "$LOG" ] || exit 0
     jq -r '.command // empty' "$LOG" | grep -E -- "$REPLAY" | awk '!seen[$0]++' | while IFS= read -r c; do

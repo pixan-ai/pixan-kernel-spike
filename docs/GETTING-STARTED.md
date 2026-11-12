@@ -147,8 +147,11 @@ Decided on 2026-11-12, built with a lock in `bin/install-lock.sh`. Not yet tried
 | "baja elevenlabs" / "instala python-pptx" | `uv pip install elevenlabs` | `/data/tools/venv` (run with `/data/tools/venv/bin/python`) |
 | "instala la herramienta ruff" | `uv tool install ruff` | `/data/bin`, on the agent's `PATH` |
 | "aprende a hacer un PowerPoint" | writes a skill | `/data/workspace/.claude/skills/` |
+| "instala ffmpeg" | `uv pip install imageio-ffmpeg==0.8.1`, then a link to its `ffmpeg` in `/data/bin` | `/data/tools/venv`, `/data/bin/ffmpeg` (about 165 MB on the volume) |
 
-It runs at once, with no approval step.
+It runs at once, with no approval step. You do not need to know the tool's name: when a task needs one the agent lacks ("transcribe esta nota de voz", "¿qué se ve en este video?"), it says which tool and why. If you are a super-user, it installs it then and there. If you are not, it says that a super-user can ask for it. It never installs system packages (`apt`); those need a pull request to the image.
+
+`ffmpeg` is not in the image because it would add about 450 MB to every agent. The recipe above uses the static build that the `imageio-ffmpeg` package carries (FFmpeg 9.0.2 in 0.8.1, pinned by version), with no root and no system libraries. It handles voice notes (Opus) and video frames.
 
 **What the owner sees.** A private Telegram message after every install: "🧰 Installed at the request of NAME: COMMAND". Every install is also a line in `/data/tools.json` (when, who by name and id, the tool, the command). Ask "¿qué tienes instalado?" to see the list.
 
