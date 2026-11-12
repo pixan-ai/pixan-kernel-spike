@@ -67,9 +67,11 @@ rm /data/settings
 check "...and says nothing about super-users when there are none" silent_about "These Telegram ids"
 mkdir -p /data/workspace; echo "- Ana prefers mornings" > /data/workspace/MEMORY.md
 check "...and what it kept from previous days (MEMORY.md), since the conversation is new" says "Ana prefers mornings"
+check "...closed by an end mark as its last line, so a memory cut by anything on the way is noticed" test "$(session_start | tail -n 1)" = "[end of MEMORY.md]"
 { echo "- first line"; head -c 30000 /dev/zero | tr '\0' x; echo; echo "- LAST-LINE"; } > /data/workspace/MEMORY.md
 check "a memory file that outgrew what is shown is not cut in silence: the agent is told what it is missing" says "MEMORY.md is too long"
 check "...and still sees the beginning" says "first line"
+check "...without the end mark: it is not the whole file" silent_about "end of MEMORY.md"
 rm /data/workspace/MEMORY.md
 check "...without showing the bot token" silent_about "123:abc"
 

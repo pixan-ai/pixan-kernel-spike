@@ -26,7 +26,7 @@ absent() { test ! -e "$1"; }
 gave() { grep -q "$1" /data/claude-stdin; }
 kept_out() { ! grep -q "$1" /data/claude-stdin; }
 
-fresh; dream
+fresh; printf -- "- old one\n- old two\n" > /data/workspace/MEMORY.md; dream
 check "a dream consolidates the conversation: Claude is given what was said" gave "Call Ana on Monday"
 check "...and what the agent answered on Telegram" gave "Noted, Monday"
 check "...but not tool results" kept_out TOOL-OUTPUT
@@ -35,7 +35,8 @@ check "...with file tools only: no shell and no network over text that anyone in
 check "...in its own config directory, not the bot's (a second Telegram plugin would silence the bot)" test "$(cat /data/claude-config-dir)" = /data/cron/config
 check "after a dream the next conversation starts clean" test -e /data/fresh
 check "...and the dream is remembered" test -e /data/cron/last-dream
-check "...and the start log says so" grep -q "dream: memory consolidated" /data/dream-log
+check "...and the start log says so, with the size before and after: a dream that drops entries is visible" grep -q "dream: memory consolidated (MEMORY.md 2 -> 1 lines)" /data/dream-log
+check "...and is told to keep, in the index, what the daily files hold and how to search them" grep -q "grep" /data/claude-prompt
 
 rm -f /data/fresh /data/claude-stdin; dream
 check "no second dream the same day: nothing runs" absent /data/claude-stdin
