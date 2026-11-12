@@ -134,6 +134,17 @@ Applied at once, kept on the volume, and confirmed to the owner in private. The 
 
 "¿Qué ajustes tienes?" lists them ([SETTINGS.md](SETTINGS.md)).
 
+## Self-improvement: installing skills and tools (decided, not built yet)
+
+As of 2026-11-12 these rules are decided; the mechanism is not in the image yet.
+
+- Only a super-user can ask the agent to install a new skill or tool (for example "baja elevenlabs" or "learn to make a PowerPoint"). The owner is one more super-user. Anyone else who asks is refused.
+- When a super-user asks, it runs at once. There is no owner approval step. The owner gets a private Telegram notice afterwards, the same as for settings ([SETTINGS.md](SETTINGS.md)).
+- An install applies only to that agent. A super-user can explicitly ask to replicate it to several agents.
+- Python 3 will be added to the kernel image (it is not there today; the base is oven/bun Debian, which already has Bun for JavaScript and TypeScript). Still under evaluation, not decided: `python3-venv`/`uv`, `ffmpeg`, `poppler-utils`, `pandoc`.
+
+How it is planned to work: skills live on the volume (`/data`); Python and Node packages go in `/data/tools`, static binaries in `/data/bin`; system packages (`apt`) only arrive through a pull request to the image. Enforcement is a lock, not an instruction: a `UserPromptSubmit` hook checks the sender against the super-users and opens a per-turn permission; a `PreToolUse` hook blocks `pip`/`npm`/`uv` installs and writes to `/data/bin` and the skills folder unless that permission is open. Every install is recorded in `/data/tools.json` (what, who asked, when, which agents) and `start.sh` reinstalls from it. API keys (for example ElevenLabs) never go through chat; the admin sets them as host variables.
+
 ### Files on the volume
 
 | File | What it is | Who writes it |

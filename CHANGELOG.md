@@ -31,6 +31,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 
 ### Added
 
+- Docs: self-improvement is decided, not built yet. Only a super-user can ask an agent to install skills or tools; the install runs at once and the owner is notified afterwards (same as settings); it applies to that agent unless a super-user asks to replicate it. Python 3 will be added to the image. See [docs/GETTING-STARTED.md](docs/GETTING-STARTED.md).
 - `docs/LEARNINGS.md`: what long-running agents taught us, in earlier fleets and here, with where each rule is applied. From it: the memory shown at session start ends with `[end of MEMORY.md]`, so a cut is noticed; the dream logs the index size before and after and keeps a pointer into the daily files; CI runs every tool as the agent's own user.
 - **Daily dream** (`bin/dream.sh`, `docs/MEMORY.md`): once a day what was said is consolidated into `/data/workspace/MEMORY.md` and the next conversation starts clean, so a session no longer grows for ever. The memory is shown to the agent at every session start. A failed dream leaves the conversation as it was. `docs/MEMORY.md` also describes the daily council: every agent of a team reporting in one Telegram group.
 - Opt-in sleep (`IDLE_SLEEP_MINUTES`): Claude stops after a quiet period and a Telegram webhook wakes the agent; the official plugin still receives the message by polling. On Railway with Serverless an idle agent used no memory, and answered 2 to 3 s after a message. See docs/SLEEP.md.
