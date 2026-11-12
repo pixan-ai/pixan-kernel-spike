@@ -154,6 +154,22 @@ How it is planned to work: skills live on the volume (`/data`); Python and Node 
 
 The rules common to every agent (`/etc/claude-code/`) come with the image and cannot be changed from inside.
 
+## What the image contains
+
+Every agent gets these, ready for its skills (decided 2026-11-12):
+
+| Tool | Made by | For |
+|---|---|---|
+| Python 3 (`python3`) | Python Software Foundation | Most skills: PowerPoint, Excel, PDFs, charts, ElevenLabs and other APIs |
+| `uv`, `uvx` | Astral | Installing Python packages and tools, fast and isolated (pinned by version and checksum) |
+| `ffmpeg` | FFmpeg project | Voice notes, audio, and frames from a video, so the agent can "see" one |
+| `pdftotext` and the rest of `poppler-utils` | Poppler (freedesktop.org) | Reading PDFs |
+| `pandoc` | John MacFarlane and contributors | Converting between Word, Markdown, HTML and PDF |
+| `unzip` | Info-ZIP | Opening zip files and skill packages |
+| Time zones (`tzdata`) | IANA | Jobs and logs in the `TZ` you set; already in the Debian base |
+
+Also there: Bun (JavaScript and TypeScript), `git`, `jq`, `curl`, `rclone`, `age`, `supercronic`; Claude Code only in the agent image, never in the published `base` ([PRODUCT-IMAGE.md](PRODUCT-IMAGE.md)). Python packages (for example `python-pptx`) are not in the image: they are installed per agent. These tools add about 750 MB to the image, most of it `ffmpeg`'s libraries and `pandoc`.
+
 ## If something is wrong
 
 | Symptom | Likely cause |
