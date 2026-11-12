@@ -38,4 +38,5 @@ Each agent reads what the others post, since in a group it hears everyone, and i
 ## Verified
 
 - In CI (`tests/dream_test.sh`): what the dream is given, that it dreams once a day and only when something was said, that a failed dream leaves the conversation intact; the memory reaching the new session (`tests/policy_test.sh`); the dream running before Claude starts (`tests/start_test.sh`).
-- Not verified yet on a real host: the dream writing the files with a real Claude, the quality of what it keeps, and a council in a real group.
+- With a real Claude, outside a container (2026-11-12): a two-message conversation became a correct `MEMORY.md` and a daily file, using only the file tools.
+- Not verified yet on a real host: the dream under the managed policy, the quality of what it keeps, and a council in a real group.
