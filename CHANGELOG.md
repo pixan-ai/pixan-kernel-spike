@@ -6,6 +6,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 
 ### Changed
 
+- Docs: stale claims fixed before v0.1.0. Peers can also set groups and super-users; the owner allowlist is private only; installs are locked even in groups; `deny` rules cover file tools only; Serverless only with the opt-in sleep; publishing builds `base` only; the secrets inventory now includes the peer and backup keys.
 - **Groups are open.** In a group the agent was told to join it now reads and can answer every member, people and bots, instead of only the owner and listed ids. `TELEGRAM_GROUP_SENDERS` and `config.sh sender` are removed. The agent is told its owner's id at every session start and that only the owner gives instructions; in groups that is an instruction, not a lock (see `docs/GROUPS.md`). Super-users (`config.sh admin ID`) may also give instructions in the groups; the owner or any super-user names them, on this agent or on a fellow agent.
 - CI fails when the publishable base image has a fixable CRITICAL vulnerability (Trivy). The agent image, which adds Claude Code and the plugin, stays report-only.
 - The agent is shown its recent job deliveries with every message (a `UserPromptSubmit` hook over `sent.jsonl`), instead of being asked to read a file it could skip. `sent.md` is replaced by `sent.jsonl`, written one line at a time.

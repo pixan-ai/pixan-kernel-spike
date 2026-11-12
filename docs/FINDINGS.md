@@ -33,12 +33,11 @@ Evidence labels: **Lab** = observed on a real run; **Docs** = from official docu
 | When claude exited, `start.sh` died with code 141 (tail got SIGPIPE under `set -e` + `pipefail`) without logging why. The container still exited, so the restart policy worked, but the documented "exit 1 and say so" was false. Fixed (`|| true`) and covered by `tests/start_test.sh`. | Lab (test) |
 | The agent does not know its own policy. Asked how to connect Gmail, it told the owner to enable the claude.ai connector and that it "should appear" in the session; `disableClaudeAiConnectors: true` blocks those connectors, so the advice cannot work. Fix: a managed `CLAUDE.md` (`/etc/claude-code/CLAUDE.md`) states its limits; verified on Railway 2026-11-10 with the workspace copy, to be re-checked with the managed one. | Lab |
 | Railway deprecated Config as Code and stops reading `railway.json` on 2026-12-01 (the file was removed from this repository on 2026-11-10; a second service created without it runs the same). Setting the Dockerfile path on the service selected the Dockerfile builder; the restart policy, Dockerfile path and watch paths now also live on the service. | Docs, Lab |
-| Railway has no shell into the container; `start.sh` mirrors the readable screen to the service log when it changes. | Lab |
+| Railway has no shell into the container; with `SCREEN_MIRROR` set (off by default), `start.sh` mirrors the readable screen to the service log when it changes. | Lab |
 
 ## Open items
 
-- A `CLAUDE.md` for the agent's workspace that states its limits and policy.
-- Pin the plugin and the base image by digest; SBOM, provenance and signing in a release workflow.
+- The plugin is not pinned (decided: the marketplace stays unpinned). The base image is pinned by digest; SBOM, provenance and signing are in the release workflow.
 - Hard floor for the shell (sandbox or filesystem permissions).
 - Egress allowlist (a firewall needs `NET_ADMIN`; unverified on Railway).
 - Environment scrubbing while the bot token sits in a plugin file.

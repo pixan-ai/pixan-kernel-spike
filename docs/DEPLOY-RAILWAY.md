@@ -16,6 +16,6 @@ Notes:
 
 - This repository carries no `railway.json`: Railway deprecated Config as Code (it stops reading `railway.json` and `railway.toml` on 2026-12-01, and new services cannot use it). The service settings above are the configuration. `.railway/railway.ts` (Infrastructure as Code) is the official alternative for teams that manage several services.
 
-- Railway bills per minute for CPU and memory. Long polling keeps a Serverless service awake, so leave Serverless off.
+- Railway bills per minute for CPU and memory. Long polling keeps a Serverless service awake, so leave Serverless off, unless you use the opt-in sleep (`IDLE_SLEEP_MINUTES`), which needs it on ([SLEEP.md](SLEEP.md)).
 - Use a dedicated bot token. Do not reuse one that another process polls.
 - Rotate the API key if it is ever pasted into a chat, log or screenshot.

@@ -27,7 +27,7 @@ One volume at `/data`:
 
 - `claude` exits: the container exits with status 1 and restarts.
 - Credential error: the `StopFailure` hook sends a Telegram alert to the owner.
-- Anything else stalls silently: check `bin/screen.sh`.
+- A message unanswered after ten minutes, or the Telegram plugin gone while Claude runs: `watchdog.sh` tells the owner (and restarts Claude for the plugin). Anything else: check `bin/screen.sh`.
 
 ## Permission profiles
 

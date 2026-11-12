@@ -9,7 +9,10 @@ Secrets are passed as environment variables at run time and are never baked into
 | `CLAUDE_CODE_OAUTH_TOKEN` | Use of the owner's Claude subscription | Host environment variable | Run `claude setup-token` as the account owner, replace the variable, redeploy. Revoke the old one in the Claude account (see Anthropic's documentation) |
 | `ANTHROPIC_API_KEY` | Pay-per-use API access; wins over the token if both are set | Host environment variable | Console: create a new key, delete the old one, replace the variable, redeploy |
 | `TELEGRAM_BOT_TOKEN` | Full control of the bot | Host environment variable and `/data/config/channels/telegram/.env` (mode 600, rewritten at every start) | BotFather `/revoke`, set the new value, redeploy |
-| `OWNER_TELEGRAM_ID` | Not secret. Who may talk to the bot | Host environment variable; `access.json` on the volume | Change the variable and redeploy: `start.sh` rebuilds `access.json` at every start |
+| `PEER_SSH_KEY` | Reading fellow agents' screens and conversations, and adding or dropping their groups and super-users | Host environment variable and `/data/ssh/peer_key` (mode 600) | New key pair; replace this variable and the public key in each peer's `PEER_PUBLIC_KEYS`; redeploy ([PEERS.md](PEERS.md)) |
+| `RCLONE_CONF` | Access to the backup storage | Host environment variable and `/data/ssh/rclone.conf` (mode 600) | Revoke at the storage provider, set the new value, redeploy ([BACKUP.md](BACKUP.md)) |
+| `BACKUP_AGE_KEY` | Decrypting every backup | Host environment variable, only while restoring; remove it afterwards | New key pair, set the new `BACKUP_AGE_RECIPIENT`; old backups stay readable with the old key ([BACKUP.md](BACKUP.md)) |
+| `OWNER_TELEGRAM_ID` | Not secret. Who may talk to the bot in private, and who gets every notice | Host environment variable; `access.json` on the volume | Change the variable and redeploy: `start.sh` rebuilds `access.json` at every start |
 
 ## Rotate when
 
