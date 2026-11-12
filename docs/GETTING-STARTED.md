@@ -61,16 +61,24 @@ A fixed-price server suits several agents better than per-minute billing, and a 
 | You say | What happens | More |
 |---|---|---|
 | "Mándame cada día a las 8 un resumen de …" | It schedules a job; you get a notice | [CRON.md](CRON.md) |
-| "Únete al grupo -100…" | It starts listening in that group, no mention needed | [GROUPS.md](GROUPS.md) |
+| "Únete al grupo -100…" | It reads and answers everyone in that group, people and bots, no mention needed | [GROUPS.md](GROUPS.md) |
 | "Tu compañero X está en …" / "¿Qué está haciendo X?" | It remembers a fellow agent and can look at its screen | [PEERS.md](PEERS.md) |
 | "Recuerda que …" / "¿Qué recuerdas de …?" | It keeps it in its memory. Every night it consolidates the day and starts a clean conversation | [MEMORY.md](MEMORY.md) |
 | "Cada día a las 9 publica en el grupo -100… lo más relevante de ayer" | The daily council: every agent of a team reports in one group, and they read each other | [MEMORY.md](MEMORY.md#the-daily-council) |
 | "Haz super-usuario a 123456789" | That person can also give it instructions in its groups | [GROUPS.md](GROUPS.md) |
+| "Mándame el archivo …" | It attaches files from its workspace, or ones it received. It cannot attach keys, credentials or its configuration | [THREAT-MODEL.md](THREAT-MODEL.md) |
 | "Anota en tu CLAUDE.md que …" | Its own lasting instructions (name, role, tone) | |
 
 Every change it makes to its own settings is confirmed to you in private ([SETTINGS.md](SETTINGS.md)).
 
-## 6. Before you rely on it
+## 6. What to expect day to day
+
+- **Every night at 4:00** the agent restarts, consolidates the day into its memory and begins a new conversation. It is away for a minute or two. The next day it knows what it kept, not the literal wording of yesterday.
+- **Every change to its settings** (a group, a super-user, a job, a fellow agent) reaches you as a private notice, whoever asked for it.
+- **If you turned on sleep** ([SLEEP.md](SLEEP.md)), the first message after a quiet period takes a few seconds longer.
+- **In groups** it answers when addressed or when a message is for everyone, and stays silent otherwise. Only you and the super-users give it instructions there.
+
+## 7. Before you rely on it
 
 - **Backups:** off until you set them up. [BACKUP.md](BACKUP.md).
 - **What it can and cannot protect:** [SECURITY.md](../SECURITY.md) and [THREAT-MODEL.md](THREAT-MODEL.md). On Railway the protection is policy and judgment, not a sandbox.
@@ -83,4 +91,8 @@ Every change it makes to its own settings is confirmed to you in private ([SETTI
 | "typing…" and no answer | Claude credential truncated or expired (see the start log) |
 | No reaction at all | Wrong bot token, or variables not deployed. The log says `Telegram rejected TELEGRAM_BOT_TOKEN` for a bad token |
 | Silent in a group | The bot was added before privacy mode was disabled, or the group id changed when it became a supergroup ([GROUPS.md](GROUPS.md)) |
+| It does not remember something from yesterday | The nightly memory left it out. Ask "¿qué recuerdas de …?", and say "recuerda que …" for what must stay ([MEMORY.md](MEMORY.md)) |
+| A job's answer came to you instead of the group | The agent is no longer in that group; tell it to join again |
+| It refuses to send a file | The file is outside its workspace; ask it to copy what you need there, if it is not a credential |
+| It never sleeps although sleep is on | The log says `not sleeping: Telegram did not accept the webhook`: the public address is missing or wrong ([SLEEP.md](SLEEP.md)) |
 | "My Telegram channel was down … Restarting" | The watchdog saw the plugin gone and restarted Claude; one message is normal, a stream of them is a bug to report |
