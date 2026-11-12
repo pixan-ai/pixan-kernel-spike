@@ -2,7 +2,7 @@
 
 Run **Claude Code 24x7 on Telegram** in one container, using only official components: the Claude Code harness, the official Telegram channel plugin and a managed policy file. About 60 lines of glue, no custom agent code.
 
-> **Status: lab / alpha.** Everything marked "proven" below was observed on a real laptop (Windows, WSL2, Docker Desktop). It is not a production-ready or audited product. See [docs/FINDINGS.md](docs/FINDINGS.md) for the evidence and what is still unverified.
+> **Status: lab / alpha.** Everything marked "proven" below was observed on a real laptop (Windows, WSL2, Docker Desktop). It is not a production-ready or audited product. See [docs/FINDINGS.md](docs/FINDINGS.md) for the evidence and what is still unverified. What earlier fleets and this project taught us: [docs/LEARNINGS.md](docs/LEARNINGS.md).
 
 ## Why this exists
 

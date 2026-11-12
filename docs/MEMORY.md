@@ -36,6 +36,8 @@ With several agents working for the same client, a daily council keeps them, and
 
 Each agent reads what the others post, since in a group it hears everyone, and its next dream keeps what matters. Stagger the times by a few minutes (9:00, 9:05, …) so that each one has read the previous ones.
 
+Where these rules came from: [LEARNINGS.md](LEARNINGS.md).
+
 ## Verified
 
 - In CI (`tests/dream_test.sh`): what the dream is given, that it dreams once a day and only when something was said, that a failed dream leaves the conversation intact; the memory reaching the new session (`tests/policy_test.sh`); the dream running before Claude starts (`tests/start_test.sh`).

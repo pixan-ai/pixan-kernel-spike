@@ -51,6 +51,12 @@ jobs:
           for t in start tools policy cron peer config backup sleep dream; do
             docker run --rm --user 0 --entrypoint bash -v "$PWD/tests:/tests:ro" pixan-kernel-spike:ci "/tests/${t}_test.sh" || exit 1
           done
+      # A tool the agent's user cannot reach fails as "command not found", with no other sign: run each one as that user.
+      - name: Every tool runs as the agent's own user
+        run: |
+          docker run --rm --entrypoint sh pixan-kernel-spike:ci -ec 'test "$(id -u)" = 1001
+            claude --version; bun --version; jq --version; curl --version; age --version; rclone version
+            supercronic -version; ssh -V; script --version; realpath --version; tini --version' > /dev/null
       # The gate: what this project publishes (the base target, no Anthropic software) must have no fixable CRITICAL vulnerability.
       - name: Build the publishable base target
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
