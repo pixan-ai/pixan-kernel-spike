@@ -6,6 +6,7 @@ name=$1; shift; [ $# -gt 0 ] || set -- "$(cat "/data/cron/prompts/$name")"
 export CLAUDE_CONFIG_DIR=/data/cron/config
 cd /data/workspace || exit 1
 to=$(cat "/data/cron/prompts/$name.to" 2> /dev/null || true)  # a group to deliver to; empty = the owner, in private
+grep -qxF "group $to" /data/settings 2> /dev/null || to=    # only a group this agent is still in
 # This session has no Telegram on purpose: it only writes the message, and this script delivers it.
 if out=$(timeout "${JOB_TIMEOUT:-900}" claude -p --permission-mode auto "$*
 

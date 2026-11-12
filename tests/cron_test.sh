@@ -40,6 +40,9 @@ check "a job without a prompt on its line takes it from its file" grep -q "PROMP
 check "what a job writes on stderr never reaches the owner" bash -c '! grep -q "noise on stderr" /data/curl-args /data/workspace/sent.jsonl'
 
 fresh; mkdir -p /data/cron/prompts; printf '%s' "-1001" > /data/cron/prompts/news.to; job
+only_owner() { grep -q "chat_id=42" /data/curl-args && ! grep -q "chat_id=-1001" /data/curl-args; }
+check "a job for a group this agent is no longer in (dropped, or never was) delivers to the owner instead" only_owner
+: > /data/curl-args; echo "group -1001" > /data/settings; job
 check "a job with a group as its destination delivers there" grep -q "chat_id=-1001" /data/curl-args
 check "the job's session is told to write the message, not to send it" grep -q "do not look for a tool to send it" /data/claude-prompt
 : > /data/curl-args; job CLAUDE_STUB=fail
