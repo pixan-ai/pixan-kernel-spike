@@ -10,6 +10,8 @@ The host's variables are for installation: credentials, the owner, keys. Day-to-
 | run a prompt on a schedule | `config.sh job "0 8 * * *" news "Summarise…"` | See [CRON.md](CRON.md) |
 | undo any of these | `config.sh drop VALUE` | Removes the lines with that value |
 
+Super-users also decide what the agent installs (packages, tools, skills): see [GETTING-STARTED.md](GETTING-STARTED.md#self-improvement-installing-skills-and-tools).
+
 `TELEGRAM_GROUP_IDS` still works: `start.sh` adds it to the same file at every start.
 
 ## One agent setting another's groups

@@ -20,6 +20,9 @@ COPY --chmod=755 bin/ /usr/local/bin/
 
 USER 1001
 ENV DISABLE_AUTOUPDATER=1 CLAUDE_CONFIG_DIR=/data/config TELEGRAM_STATE_DIR=/data/config/channels/telegram CLAUDE_CODE_ENABLE_PROMPT_SUGGESTION=false CLAUDE_CODE_DISABLE_CRON=1
+# What a super-user has the agent install (bin/install-lock.sh) lives on the volume, and comes after the image's own commands in PATH.
+ENV PATH="${PATH}:/data/bin" VIRTUAL_ENV=/data/tools/venv UV_TOOL_DIR=/data/tools/uv UV_TOOL_BIN_DIR=/data/bin UV_LINK_MODE=copy \
+    BUN_INSTALL_GLOBAL_DIR=/data/tools/bun BUN_INSTALL_BIN=/data/bin
 WORKDIR /data/workspace
 # tini is PID 1: it forwards SIGTERM (bash as PID 1 ignores it, so the host had to kill the container) and reaps orphans.
 ENTRYPOINT ["tini", "-g", "--", "/usr/local/bin/start.sh"]

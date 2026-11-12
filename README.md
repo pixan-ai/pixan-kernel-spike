@@ -100,6 +100,7 @@ bin/backup.sh                 nightly encrypted backup, and restore onto an empt
 bin/watchdog.sh               tells the owner about a message left unanswered, and restarts when the Telegram plugin is gone
 bin/notify.sh                 one Telegram message to the owner
 bin/denials.sh                loaded policy + tool errors from the latest session
+bin/install-lock.sh           the install lock: only a super-user can make the agent install (see docs/GETTING-STARTED.md)
 policy/managed-settings.json  the managed policy and hooks
 bin/system.cron               the image's own scheduled jobs (daily recycle)
 policy/CLAUDE.md              what the agent is told about its limits (managed: root-owned, updated with the image)

@@ -54,6 +54,7 @@ cd "$WS"
 # Scheduled jobs: config.sh apply (above) built /data/cron/crontab from the image's jobs and the agent's. If the last heartbeat is old, say so: jobs due meanwhile did not run.
 [ ! -e /data/cron/alive ] || [ -e /data/idle ] || (( $(date +%s) - $(stat -c %Y /data/cron/alive) < 300 )) || notify.sh "Back online. I was down from $(date -r /data/cron/alive '+%F %H:%M') to $(date '+%H:%M'); jobs scheduled in between did not run." || true
 (while touch /data/cron/alive; do sleep 30; done) &
+install-lock.sh replay &  # what super-users had installed comes back if it went missing (docs/GETTING-STARTED.md); never blocks the start
 supercronic -quiet -inotify /data/cron/crontab &
 # Opt-in sleep (IDLE_SLEEP_MINUTES, docs/SLEEP.md): after that long without activity Claude is stopped and doorbell.sh waits for
 # Telegram to announce a message; then Claude starts again and continues the conversation. /data/idle marks "asleep".

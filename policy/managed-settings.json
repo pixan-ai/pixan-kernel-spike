@@ -50,6 +50,16 @@
             "timeout": 5
           }
         ]
+      },
+      {
+        "matcher": "Bash|Write|Edit|MultiEdit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "install-lock.sh check",
+            "timeout": 5
+          }
+        ]
       }
     ],
     "Stop": [
@@ -58,6 +68,11 @@
           {
             "type": "command",
             "command": "rm -f /data/cron/pending /data/cron/pending.told",
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "[ \"$CLAUDE_CONFIG_DIR\" != /data/config ] || rm -f /data/cron/install-ok",
             "timeout": 5
           }
         ]
@@ -74,6 +89,11 @@
           {
             "type": "command",
             "command": "[ -e /data/cron/pending ] || date +%s > /data/cron/pending",
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "install-lock.sh turn",
             "timeout": 5
           }
         ]
@@ -97,6 +117,16 @@
             "type": "command",
             "command": "jq -c '{at: (now | todate), event: .hook_event_name, tool: .tool_name, mode: .permission_mode, error: ((.error // .reason // \"\") | tostring | .[0:200])}' >> /data/audit.jsonl",
             "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "Bash|Write|Edit|MultiEdit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "install-lock.sh record",
+            "timeout": 25
           }
         ]
       }
