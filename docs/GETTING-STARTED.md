@@ -56,7 +56,7 @@ A fixed-price server suits several agents better than per-minute billing, and a 
 2. Send the bot "Hola". It answers within a few seconds.
 3. Ask "¿Cómo te llamas y cuál es tu id?": it knows its own bot name.
 
-`/start` shows pairing instructions from the plugin. Ignore them: only the owner is allowed, and no pairing is needed.
+`/start` shows pairing instructions from the plugin. Ignore them: in private only the owner is allowed, and no pairing is needed.
 
 ## 5. What to tell the agent next
 

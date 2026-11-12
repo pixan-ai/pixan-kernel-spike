@@ -31,7 +31,7 @@ Set `PEERS` on the agent that looks, as `name=host` pairs separated by spaces, f
 ## Read before enabling
 
 - **The screen is the owner's conversation, and `transcript` returns more of it.** Whoever holds a listed key can read what B is discussing with its owner.
-- `PEER_SSH_KEY` is a secret in A's environment. On hosts without a hard floor (Railway), A's own shell can read it. A leaked key gives read access to peers' screens, nothing more.
+- `PEER_SSH_KEY` is a secret in A's environment. On hosts without a hard floor (Railway), A's own shell can read it. A leaked key lets its holder read the screens and conversations of the peers that list it, and add or drop their groups and super-users (each change is reported to that peer's owner).
 - Do not publish port 2222 to the internet; use the host's private network.
 - Without `PEER_PUBLIC_KEYS` no SSH server starts.
 

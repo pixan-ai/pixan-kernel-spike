@@ -21,7 +21,7 @@ jq empty policy/managed-settings.json
 hadolint Dockerfile
 docker build -t pixan-kernel-spike .
 bash tests/docs_test.sh
-for t in start tools policy; do
+for t in start tools policy cron peer config backup sleep dream install; do
   docker run --rm --user 0 --entrypoint bash -v "$PWD/tests:/tests:ro" pixan-kernel-spike "/tests/${t}_test.sh" || break
 done
 ```

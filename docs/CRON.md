@@ -42,5 +42,4 @@ Claude Code's own in-session scheduler is disabled (`CLAUDE_CODE_DISABLE_CRON=1`
 
 - Whether jobs share the subscription's usage window with the bot.
 - The daily recycle (`pkill -x script` at 04:00): check the service log the morning after.
-- On Railway (2026-11-10): a job added with `config.sh job` ran and was dropped by the agent afterwards. A job meant for a group failed, because jobs could only reach the owner and the job's session looked for a tool to send with; fixed, to be re-tested.
 - The downtime notice after a real outage, and a failing or hung job in production.

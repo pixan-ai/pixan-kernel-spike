@@ -42,7 +42,7 @@ RUN curl -fsSL https://claude.ai/install.sh | bash -s "${CLAUDE_CODE_VERSION}" \
  && /home/agent/.local/bin/claude --version
 ENV PATH="/home/agent/.local/bin:${PATH}"
 
-# The official plugin is baked into /opt/seed/config; start.sh copies it to the volume if missing.
+# The official plugin is baked into /opt/seed/config; start.sh copies it to the volume at every start.
 RUN export CLAUDE_CONFIG_DIR=/opt/seed/config && mkdir -p "$CLAUDE_CONFIG_DIR" \
  && claude plugin marketplace add anthropics/claude-plugins-official \
  && claude plugin install telegram@claude-plugins-official \

@@ -1,8 +1,8 @@
 # pixan-kernel-spike
 
-Run **Claude Code 24x7 on Telegram** in one container, using only official components: the Claude Code harness, the official Telegram channel plugin and a managed policy file. About 60 lines of glue, no custom agent code.
+Run **Claude Code 24x7 on Telegram** in one container, using only official components: the Claude Code harness, the official Telegram channel plugin and a managed policy file. A few hundred lines of shell glue, no custom agent code.
 
-> **Status: lab / alpha.** Everything marked "proven" below was observed on a real laptop (Windows, WSL2, Docker Desktop). It is not a production-ready or audited product. See [docs/FINDINGS.md](docs/FINDINGS.md) for the evidence and what is still unverified. What earlier fleets and this project taught us: [docs/LEARNINGS.md](docs/LEARNINGS.md).
+> **Status: lab / alpha.** It has run on a laptop (Windows, WSL2, Docker Desktop) and on Railway. It is not a production-ready or audited product. See [docs/FINDINGS.md](docs/FINDINGS.md) for the evidence and what is still unverified. What earlier fleets and this project taught us: [docs/LEARNINGS.md](docs/LEARNINGS.md).
 
 ## Why this exists
 
@@ -40,7 +40,7 @@ Use a **new bot token**. Two processes polling the same bot conflict (HTTP 409).
 
 ## Deploy on Railway
 
-See [docs/DEPLOY-RAILWAY.md](docs/DEPLOY-RAILWAY.md). The Dockerfile deploys as is; you add one volume at `/data` and three variables.
+See [docs/DEPLOY-RAILWAY.md](docs/DEPLOY-RAILWAY.md). The Dockerfile deploys as is; you add one volume at `/data` and four variables (a Claude credential, `TELEGRAM_BOT_TOKEN`, `OWNER_TELEGRAM_ID`, `RAILWAY_RUN_UID=0`).
 
 ## Configuration
 
@@ -49,12 +49,12 @@ See [docs/DEPLOY-RAILWAY.md](docs/DEPLOY-RAILWAY.md). The Dockerfile deploys as 
 | `CLAUDE_CODE_OAUTH_TOKEN` | one of the two | Claude subscription (Pro/Max) token from `claude setup-token`; uses the subscription's limits |
 | `ANTHROPIC_API_KEY` | one of the two | Console API key, billed per use. Takes precedence if both are set |
 | `TELEGRAM_BOT_TOKEN` | yes | Bot token, read by the official plugin |
-| `OWNER_TELEGRAM_ID` | yes | Only this user can talk to the bot (allowlist) |
+| `OWNER_TELEGRAM_ID` | yes | The only user who can talk to the bot in private (allowlist), and who gets every notice. In groups the bot hears every member |
 | `TELEGRAM_GROUP_IDS` | no | Telegram groups the bot may take part in (see [docs/GROUPS.md](docs/GROUPS.md)). In a listed group it reads and answers every member, people and bots. Unset = private chat with the owner only |
 | `IDLE_SLEEP_MINUTES` | no | Sleep after this many idle minutes and wake on the next message, so an idle agent stops costing (see [docs/SLEEP.md](docs/SLEEP.md)). Unset = always on |
 | `RCLONE_CONF` | no | Storage credentials for the nightly encrypted backup (see [docs/BACKUP.md](docs/BACKUP.md), which lists the other backup variables) |
 | `BACKUP_AGE_KEY` | no | Only to restore: the private key, on a new empty volume. Remove it afterwards |
-| `PEER_PUBLIC_KEYS` | no | Public SSH keys of fellow agents allowed to read this agent's screen (see [docs/PEERS.md](docs/PEERS.md)). Unset = no SSH server |
+| `PEER_PUBLIC_KEYS` | no | Public SSH keys of fellow agents allowed to read this agent's screen and conversation and to add or drop its groups and super-users (see [docs/PEERS.md](docs/PEERS.md)). Unset = no SSH server |
 | `PEER_SSH_KEY` | no | Private SSH key this agent uses to look at fellow agents |
 | `SCREEN_MIRROR` | no | Seconds between copies of the readable screen to the service log (e.g. `30`). Unset = off. The screen contains your conversation: enable only to debug |
 | `CLAUDE_FLAGS` | no | Extra `claude` flags. Empty = default interactive mode (auto mode) |
@@ -67,8 +67,8 @@ The policy lives in [`policy/managed-settings.json`](policy/managed-settings.jso
 
 Defense in depth, each layer using an official mechanism:
 
-1. **Sender allowlist**: in private the plugin only accepts the configured Telegram user. In a group the owner enabled, every member is heard; there the owner-only rule is an instruction to the agent, not a lock.
-2. **Managed policy**: root-owned file; `deny` rules for credentials and for writes to the config, plugin and policy paths.
+1. **Sender allowlist**: in private the plugin only accepts the configured Telegram user. In a group the owner enabled, every member is heard; there the owner-only rule is an instruction to the agent, not a lock, except for installs, which a hook refuses to anyone but the owner and the super-users.
+2. **Managed policy**: root-owned file; `deny` rules, enforced on Claude's file tools only, for credentials and for writes to the config, plugin and policy paths (a shell command can still write them, see below).
 3. **Permission classifier (auto mode)**: reviews every action that is not explicitly allowed.
 4. **Never waits for a person**: `permissions.denyInsteadOfPrompting` denies any call that would need an approval prompt; the agent is told and carries on. Nothing is ever allowed by it.
 5. **Hooks**: every tool call, failure and denial adds one short line to `/data/audit.jsonl` (when, event, tool, mode, error; the last 10000 are kept, the full detail is in the session transcript); credential failures alert the owner on Telegram.
@@ -86,13 +86,13 @@ The full picture is in the [threat model](docs/THREAT-MODEL.md). Report vulnerab
 ## Repository layout
 
 ```
-Dockerfile                    image: Claude Code + official Telegram plugin, non-root
+Dockerfile                    image, non-root: `base` (no Anthropic software, the only publishable target) and `agent` (+ Claude Code and the official Telegram plugin)
 compose.yml                   local run, one volume at /data
 bin/start.sh                  entrypoint: seed config, allowlist, pre-accept, run claude in a pty
 bin/screen.sh                 readable view of the Claude screen log
 bin/job.sh                    runs one scheduled prompt and delivers the answer (see docs/CRON.md)
 bin/config.sh                 settings the agent changes itself when the owner asks (see docs/SETTINGS.md)
-bin/peer.sh                   what fellow agents may do over SSH: look, and set groups (see docs/PEERS.md)
+bin/peer.sh                   what fellow agents may do over SSH: look, and set groups and super-users (see docs/PEERS.md)
 bin/dream.sh                  the daily dream: consolidate memory, then a clean conversation (see docs/MEMORY.md)
 bin/doorbell.sh               the opt-in sleep: wait for Telegram to announce a message (see docs/SLEEP.md)
 bin/doorbell.js               the listener Telegram calls while the agent sleeps
@@ -102,7 +102,7 @@ bin/notify.sh                 one Telegram message to the owner
 bin/denials.sh                loaded policy + tool errors from the latest session
 bin/install-lock.sh           the install lock: only a super-user can make the agent install (see docs/GETTING-STARTED.md)
 policy/managed-settings.json  the managed policy and hooks
-bin/system.cron               the image's own scheduled jobs (daily recycle)
+bin/system.cron               the image's own scheduled jobs (daily recycle, watchdog, nightly backup)
 policy/CLAUDE.md              what the agent is told about its limits (managed: root-owned, updated with the image)
 tests/                        acceptance tests (run inside the built image) and docs-vs-code checks
 docs/                         architecture, findings, deployment, threat model, secrets, repository settings, releasing
