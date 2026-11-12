@@ -86,6 +86,63 @@ Every change it makes to its own settings is confirmed to you in private ([SETTI
 - **What it can and cannot protect:** [SECURITY.md](../SECURITY.md) and [THREAT-MODEL.md](THREAT-MODEL.md). On Railway the protection is policy and judgment, not a sandbox.
 - **Rotating a credential:** [SECRETS.md](SECRETS.md).
 
+## Everything you can configure
+
+Three places, and nothing else. What is not listed here is fixed on purpose (the 4:00 recycle, the limits of the policy, the size of the logs).
+
+### On the host: variables
+
+Set once, at installation. Changing one restarts the agent.
+
+| Variable | Default | What it does | More |
+|---|---|---|---|
+| `CLAUDE_CODE_OAUTH_TOKEN` | required, or the next | Claude subscription token | step 2 |
+| `ANTHROPIC_API_KEY` | | Console API key instead of the subscription; wins if both are set | step 2 |
+| `TELEGRAM_BOT_TOKEN` | required | This agent's own bot | step 1 |
+| `OWNER_TELEGRAM_ID` | required | The owner: the only private chat, and who gets every notice | step 1 |
+| `TZ` | `UTC` | Time zone for jobs, the nightly recycle and the dates the agent sees | [CRON.md](CRON.md) |
+| `ANTHROPIC_MODEL` | Claude's default | Pin the model | |
+| `CLAUDE_FLAGS` | empty | Extra flags for `claude`, e.g. `--advisor claude-opus-5-5` | |
+| `TELEGRAM_GROUP_IDS` | empty | Groups to join from the first start (the same as telling the agent) | [GROUPS.md](GROUPS.md) |
+| `IDLE_SLEEP_MINUTES` | empty = always on | Sleep after this many quiet minutes | [SLEEP.md](SLEEP.md) |
+| `DOORBELL_URL` | `https://` + `RAILWAY_PUBLIC_DOMAIN` | Public address Telegram calls to wake a sleeping agent. Needed outside Railway | [SLEEP.md](SLEEP.md) |
+| `RAILWAY_PUBLIC_DOMAIN` | set by Railway | Not yours to set: Railway provides it when the service has a public domain | [SLEEP.md](SLEEP.md) |
+| `PORT` | `8080` | Port the wake-up listener uses | [SLEEP.md](SLEEP.md) |
+| `BACKUP_REMOTE` | empty = no backups | Where the nightly encrypted backup goes | [BACKUP.md](BACKUP.md) |
+| `BACKUP_AGE_RECIPIENT` | | Public key the backups are encrypted to | [BACKUP.md](BACKUP.md) |
+| `RCLONE_CONF` | | Credentials for the backup storage (secret) | [BACKUP.md](BACKUP.md) |
+| `BACKUP_KEEP_DAYS` | `14` | Days of backups kept | [BACKUP.md](BACKUP.md) |
+| `BACKUP_AGE_KEY` | | Only to restore onto an empty volume; remove it afterwards | [BACKUP.md](BACKUP.md) |
+| `PEER_PUBLIC_KEYS` | empty = nobody | Keys of the fellow agents allowed to look at this one and set its groups and super-users | [PEERS.md](PEERS.md) |
+| `PEER_SSH_KEY` | | Key this agent uses to look at others | [PEERS.md](PEERS.md) |
+| `PEERS` | empty | Fellow agents by name, `Name=host` separated by spaces (the same as telling the agent) | [PEERS.md](PEERS.md) |
+| `SCREEN_MIRROR` | empty = off | Seconds between copies of the agent's screen to the host log. Shows conversations to whoever reads the log | [THREAT-MODEL.md](THREAT-MODEL.md) |
+| `JOB_TIMEOUT` | `900` | Seconds a scheduled job or the nightly dream may take | [CRON.md](CRON.md) |
+| `MEM_LIMIT` | `4g` | Memory cap, with Docker Compose only | |
+
+### By talking to the agent
+
+Applied at once, kept on the volume, and confirmed to the owner in private. The owner or a super-user asks.
+
+| Setting | Say | Undo |
+|---|---|---|
+| A group to take part in | "únete al grupo -100…" | "sal del grupo -100…" |
+| A super-user | "haz super-usuario a 123456789" | "quita a 123456789" |
+| A fellow agent, by name | "tu compañero Junior está en agent2.railway.internal" | "olvida a Junior" |
+| A scheduled job, to you or to a group | "cada día a las 8 mándame …" | "quita la tarea …" |
+| Something to remember | "recuerda que …" | "olvida que …" |
+
+"¿Qué ajustes tienes?" lists them ([SETTINGS.md](SETTINGS.md)).
+
+### Files on the volume
+
+| File | What it is | Who writes it |
+|---|---|---|
+| `/data/workspace/CLAUDE.md` | This agent's own lasting instructions: name, role, tone, whether it supervises others | The agent, when you ask ("anota en tu CLAUDE.md que …") |
+| `/data/workspace/MEMORY.md` | What it remembers | The agent, and the nightly dream ([MEMORY.md](MEMORY.md)) |
+
+The rules common to every agent (`/etc/claude-code/`) come with the image and cannot be changed from inside.
+
 ## If something is wrong
 
 | Symptom | Likely cause |
