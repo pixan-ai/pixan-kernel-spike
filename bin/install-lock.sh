@@ -7,8 +7,11 @@
 #   install-lock.sh replay  start.sh: make the Python environment, then reinstall the recorded packages (failures are logged)
 set -uo pipefail
 OK=/data/cron/install-ok; LOG=/data/tools.json; B=$(dirname "$(readlink -f "$0")")
-# Package managers, and anything that touches where installs live. A pattern, not a sandbox (docs/THREAT-MODEL.md).
-INSTALL='(^|[^[:alnum:]_.-])((uv( pip| tool)?|pip[0-9.x]*|python3? -m pip|npm|pnpm|yarn|bun) +(install|i|add)( |$)|(uvx|bunx|npx|bun x)( |$)|claude +(plugin|mcp) )|/data/(bin|tools)(/| |$)|\.claude/skills|/data/config/skills'
+# Package managers. A pattern, not a sandbox (docs/THREAT-MODEL.md).
+INSTALL='(^|[^[:alnum:]_.-])((uv( pip| tool)?|pip[0-9.x]*|python3? -m pip|npm|pnpm|yarn|bun) +(install|i|add)( |$)|(uvx|bunx|npx|bun x)( |$)|claude +(plugin|mcp) )'
+# ...and writing where installs live. Reading, listing and running what is there is not an install, nor is text that names the folder.
+WHERE='(/data/(bin|tools)(/|[ "'"'"']|$)|\.claude/skills|/data/config/skills)'
+INSTALL="$INSTALL|(^|[;&|(] *)(cp|mv|ln|install|tee|touch|mkdir|rm|rmdir|chmod|chown|tar|unzip|curl|wget|rsync|dd|git) [^;&|]*$WHERE|>+ *[\"']?[^ ;&|]*$WHERE"
 # Only these are replayed at start: a package manager and package names, nothing a shell would interpret.
 REPLAY='^(uv pip install|uv tool install|bun add -g) [][A-Za-z0-9._=<>~!@/:+, -]+$'
 in=$( [ "${1:-}" = replay ] || cat )
