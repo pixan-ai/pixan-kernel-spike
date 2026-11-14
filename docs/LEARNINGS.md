@@ -47,6 +47,9 @@ Here: every document ends with what was verified where, and what was not.
 **A flag can eat the prompt.** `claude -p --tools "Read,Edit" "do this"` takes "do this" as a third tool name: the run starts with no instructions and exits 0. Found only by running a real Claude.
 Here: the prompt goes first, `--tools` last, and a test pins the order.
 
+**An error is not always on the error stream.** `claude -p` reports "Not logged in" or a limit on standard output and exits 1. Our dream discarded standard output and kept only the error stream, so it failed for two days saying nothing.
+Rule: when a tool fails, keep everything it said.
+
 **A stub that accepts anything proves nothing.** A test passed while the code deleted the bot token before using it, because the stub never looked at the token.
 Rule: a stub must demand what the real thing demands.
 

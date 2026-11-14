@@ -11,7 +11,7 @@ cat > "$STUBS/claude" <<'EOF2'
 #!/usr/bin/env bash
 # Stub Claude: record its config directory, its prompt and what it was given to read; then behave as CLAUDE_STUB says.
 echo "$CLAUDE_CONFIG_DIR" > /data/claude-config-dir; printf '%s' "$*" > /data/claude-prompt; printf '%s\n' "$@" > /data/claude-args; cat > /data/claude-stdin
-[ "${CLAUDE_STUB:-ok}" = ok ] || { echo boom >&2; exit 1; }
+case "${CLAUDE_STUB:-ok}" in ok) ;; quiet) echo "Not logged in"; exit 1 ;; *) echo boom >&2; exit 1 ;; esac  # quiet: like the real one, the reason on stdout
 echo "- Ana prefers mornings" > /data/workspace/MEMORY.md
 EOF2
 chmod 755 "$STUBS"/*
@@ -52,6 +52,8 @@ check "a failed dream does not wipe the conversation: it continues" absent /data
 check "...and is tried again at the next start" absent /data/cron/last-dream
 check "...and the start log says why" grep -q "dream: failed.*boom" /data/dream-log
 check "...without stopping the agent from starting" rc 0
+fresh; dream CLAUDE_STUB=quiet
+check "Claude gives its reason on standard output, not as an error: the start log still says why" grep -q "dream: failed.*Not logged in" /data/dream-log
 
 fresh; rm "$P/s1.jsonl"; dream
 check "a new agent with no conversation does not dream" absent /data/claude-stdin

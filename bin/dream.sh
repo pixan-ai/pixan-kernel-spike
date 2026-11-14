@@ -19,6 +19,6 @@ jq -r 'select(.type == "user" or .type == "assistant") | .type as $t
   timeout "${JOB_TIMEOUT:-900}" claude -p --permission-mode auto "You are consolidating this agent's memory at the end of its day. Standard input is its conversation since the last time. Tomorrow it starts a new conversation and will know only what is in $W/MEMORY.md, so:
 1. Rewrite $W/MEMORY.md: merge today into what is there. Keep what a colleague taking over tomorrow needs: who is who and how they like things, decisions, commitments and open tasks with their dates, lessons learned. Drop what is done or obsolete. At most 150 lines and 15000 characters: what does not fit is not shown to the agent. Keep one line in it saying what the files in $W/memory/ hold and how to search them (grep -ril WORD $W/memory): without it nobody opens them. Never credentials.
 2. Write $W/memory/$(date +%F).md: a short account of today (what was asked, what was done, what is pending).
-Answer with one line." --tools "Read,Edit,Write" > /dev/null 2> /data/cron/dream.err ||
-  { echo "dream: failed, the conversation continues: $(tail -c 300 /data/cron/dream.err)" >&2; exit 0; }  # a failed dream changes nothing
+Answer with one line." --tools "Read,Edit,Write" > /data/cron/dream.err 2>&1 ||  # both streams: Claude reports "Not logged in" or a limit on standard output
+  { echo "dream: failed, the conversation continues: $(tail -c 300 /data/cron/dream.err)" >&2; exit 0; }  # a failed dream changes nothing; a non-zero exit with nothing said is in the log too
 touch $L /data/fresh; echo "dream: memory consolidated (MEMORY.md $n0 -> $(wc -l < MEMORY.md) lines), starting a clean conversation" >&2
