@@ -50,6 +50,9 @@ Here: the prompt goes first, `--tools` last, and a test pins the order.
 **An error is not always on the error stream.** `claude -p` reports "Not logged in" or a limit on standard output and exits 1. Our dream discarded standard output and kept only the error stream, so it failed for two days saying nothing.
 Rule: when a tool fails, keep everything it said.
 
+**A guard that matches a path matches every use of it.** The install lock refused any command naming the install folders, so it also blocked using what had been installed, and announced a version check as an install. Found in the first hour on a live agent.
+Rule: guard the action (writing there, running an installer), not the mention.
+
 **A stub that accepts anything proves nothing.** A test passed while the code deleted the bot token before using it, because the stub never looked at the token.
 Rule: a stub must demand what the real thing demands.
 

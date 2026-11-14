@@ -40,6 +40,15 @@ check "...and a skill written with the file tools" refuses Write /data/workspace
 check "...and a plugin or an MCP server" refuses Bash "claude mcp add x -- npx x"
 check "...but ordinary work goes through" allows Bash "python3 report.py && ls /data/workspace"
 check "...and ordinary files too" allows Write /data/workspace/notes.md
+# Seen on a live agent: with the lock closed it could not use what was installed, nor write a note that named the folder.
+check "using what is installed is not installing: a tool by its full path" allows Bash "/data/bin/ffmpeg -i /tmp/a.ogg /tmp/a.wav"
+check "...the Python environment" allows Bash "/data/tools/venv/bin/python -c 'import elevenlabs'"
+check "...looking at what is there" allows Bash "ls -la /data /data/bin; cat /data/tools/README"
+check "...and text that only names the folder" allows Bash "sed -i 's#x#/data/bin and /data/tools are on the volume#' /data/workspace/MEMORY.md"
+check "...but putting something there is still refused: a copy" refuses Bash "cp /tmp/yt /data/bin/yt"
+check "...a link" refuses Bash "cd /tmp && ln -sf /tmp/x /data/bin/ffmpeg"
+check "...a redirect" refuses Bash "echo '#!/bin/sh' > /data/bin/yt"
+check "...and a skill made from the shell" refuses Bash "mkdir -p /data/workspace/.claude/skills/voz"
 
 turn 42 alfredo
 check "the owner asks: the install goes through" allows Bash "uv pip install elevenlabs"
@@ -48,6 +57,7 @@ check "...in this session only: another session (a job, a subagent of another ru
 check "...nor a scheduled job running meanwhile, whatever session id it claims" refuses Bash "uv pip install x" S1 /data/cron/config
 check "...and the record itself can never be written by hand" refuses Bash "echo '{}' >> /data/tools.json"
 check "...nor the lock opened by hand" refuses Bash "touch /data/cron/install-ok"
+check "the agent can read the install record: the Read tool is allowed on it" jq -e '.permissions.allow | index("Read(//data/tools.json)") != null' "$POLICY"
 turn 777 ana
 check "a super-user named with config.sh admin is a super-user here too" allows Bash "uv tool install ruff"
 
@@ -81,6 +91,8 @@ check "an install that ran is recorded in /data/tools.json" test "$(jq -c '[.by,
 check "...and the owner is told, in private" bash -c 'grep -q "chat_id=42" /data/curl-args && grep -q "Installed at the request of alfredo: uv pip install elevenlabs" /data/curl-args'
 record Bash "ls /data/workspace"
 check "...ordinary commands are not recorded" test "$(wc -l < /data/tools.json)" = 1
+: > /data/curl-args; record Bash "/data/bin/ffmpeg -version 2>&1 | head -1; ls -l /data/bin/ffmpeg"
+check "...nor is using or looking at an installed tool (seen live: it was recorded and announced as an install)" test "$(wc -l < /data/tools.json)" = 1 -a ! -s /data/curl-args
 hook Stop 0 1 /data/cron/config '{}'
 check "the end of a job's turn leaves the main session's lock alone" test -e /data/cron/install-ok
 hook Stop 0 1 /data/config '{}'

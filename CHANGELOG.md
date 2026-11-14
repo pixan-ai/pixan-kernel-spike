@@ -60,6 +60,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 
 ### Fixed
 
+- Install lock, seen on a live agent: any command that named `/data/bin` or `/data/tools` counted as an install. With the lock closed the agent could not run an installed tool by its path, list the folder, or write a note that mentioned it; with it open, checking a tool's version was recorded and announced to the owner as an install. The lock now refuses package managers and **writes** into those folders (copy, link, move, download, redirect), not reading or running what is there. The agent may read `/data/tools.json` with the Read tool, which the permissions denied.
 - A dream that failed logged no reason: Claude writes it on standard output, which was thrown away. Seen on Railway, where every dream since 2026-11-12 failed with an empty message. The log now carries it.
 - A `MEMORY.md` longer than what is shown at session start was cut in silence. The agent is now told it is missing the end and must shorten it; the dream keeps the index under 150 lines and 15000 characters.
 - The Telegram reply tool is pre-approved, so nothing reviewed the files it attaches, and its `files` parameter takes any path. A `PreToolUse` hook now refuses attachments from outside `/data/workspace`, `/tmp` and the Telegram inbox (keys, credentials, conversations), also through `..` or a link.
